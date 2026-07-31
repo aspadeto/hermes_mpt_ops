@@ -1,0 +1,29 @@
+# Segredos — nunca versionar
+.env
+*.token
+GITHUB_TOKEN.txt
+.git-credentials
+client_secret*.json
+google_token.json
+*_secret_*.json
+
+# Ambientes / venvs
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Infra local
+hermes-webui/
+backups/
+
+# Editor / SO
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Banco de dados temporários/regeneráveis (exceto os versionados explicitamente)
+# OBS: pendencias.db É versionado (exceção abaixo)
+!data/pendencias.db
