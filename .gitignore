@@ -1,11 +1,15 @@
 # Segredos — nunca versionar
 .env
+.env.*
 *.token
 GITHUB_TOKEN.txt
 .git-credentials
 client_secret*.json
 google_token.json
 *_secret_*.json
+
+# Exceção: template .env-default (sanitizado, sem segredos) É versionado
+!docker/.env-default
 
 # Ambientes / venvs
 .venv/
