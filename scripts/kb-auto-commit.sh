@@ -1,13 +1,13 @@
 #!/bin/bash
 # Auto-commit script — DR MPT (KB + OPS)
 # Commits and pushes any uncommitted changes to GitHub for both repos:
-#   - dr_mpt_kb  (conhecimento)  /opt/data/hermes-data/wiki
-#   - dr_mpt_ops (engenharia)    /opt/data/hermes-data/dr_mpt_ops
+#   - dr_mpt_kb  (conhecimento)  /opt/data/hermes-data/hermes_mpt_kb
+#   - hermes_mpt_ops (engenharia)    /opt/data/hermes-data/hermes_mpt_ops
 # Usado pelo cron (a cada 10 min). Silencioso quando não há mudanças.
 
 REPOS=(
-  "/opt/data/hermes-data/wiki:dr_mpt_kb"
-  "/opt/data/hermes-data/dr_mpt_ops:dr_mpt_ops"
+  "/opt/data/hermes-data/hermes_mpt_kb:hermes_mpt_kb"
+  "/opt/data/hermes-data/hermes_mpt_ops:hermes_mpt_ops"
 )
 
 for entry in "${REPOS[@]}"; do

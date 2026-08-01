@@ -17,8 +17,8 @@ import sqlite3
 import os
 import sys
 
-OPS_PATH = os.environ.get('OPS_PATH', '/opt/data/hermes-data/dr_mpt_ops')
-DB_PATH = os.path.join(OPS_PATH, 'data', 'prt14.db')
+OPS_PATH = os.environ.get('OPS_PATH', '/opt/data/hermes-data/hermes_mpt_ops')
+DB_PATH = os.path.join(OPS_PATH, 'data', 'regional-orcamento.db')
 
 def conectar():
     if not os.path.exists(DB_PATH):
@@ -110,7 +110,7 @@ def cmd_export():
     rows = cursor.fetchall()
     
     print("# Relatório de Demandas Orçamentárias — PRT14 2026\n")
-    print("Fonte: `data/prt14.db` — SQLite\n")
+    print("Fonte: `data/regional-orcamento.db` — SQLite\n")
     
     atual = None
     for r in rows:

@@ -2,7 +2,7 @@
 """
 Importa demandas orçamentárias do SGA (HTML) para o banco SQLite.
 Uso: python3 scripts/importar-demandas.py
-      python3 scripts/importar-demandas.py --arquivo raw/articles/demandas-orcamento-prt14-2026-todas.html.md
+      python3 scripts/importar-demandas.py --arquivo raw/articles/demandas-orcamento-regional-2026-todas.html.md
 """
 
 import sqlite3
@@ -10,9 +10,9 @@ import re
 import sys
 import os
 
-OPS_PATH = os.environ.get('OPS_PATH', '/opt/data/hermes-data/dr_mpt_ops')
-WIKI_PATH = os.environ.get('WIKI_PATH', '/opt/data/hermes-data/wiki')
-DB_PATH = os.path.join(OPS_PATH, 'data', 'prt14.db')
+OPS_PATH = os.environ.get('OPS_PATH', '/opt/data/hermes-data/hermes_mpt_ops')
+KB_PATH = os.environ.get('KB_PATH', '/opt/data/hermes-data/hermes_mpt_kb')
+DB_PATH = os.path.join(OPS_PATH, 'data', 'regional-orcamento.db')
 
 def extrair_demandas(html_path):
     """Extrai demandas do arquivo HTML do SGA."""
@@ -141,8 +141,8 @@ def main():
             html_path = args[i + 1]
     
     if not html_path:
-        html_path = os.path.join(WIKI_PATH, 'raw', 'articles',
-                                 'demandas-orcamento-prt14-2026-todas.html.md')
+        html_path = os.path.join(KB_PATH, 'raw', 'articles',
+                                 'demandas-orcamento-regional-2026-todas.html.md')
     
     if not os.path.exists(html_path):
         print(f"ERRO: Arquivo não encontrado: {html_path}")

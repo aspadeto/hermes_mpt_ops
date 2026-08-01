@@ -39,9 +39,9 @@ EXCLUDE_PATTERNS = [
     ".skills_prompt_snapshot.json",
 ]
 
-# Excluded from data/ — repos git (wiki, dr_mpt_ops) são versionados no GitHub,
+# Excluded from data/ — repos git (hermes_mpt_kb, hermes_mpt_ops) são versionados no GitHub,
 # backups/ é alvo da rotação, .google-venv é ambiente
-DATA_EXCLUDE = {".google-venv", "wiki", "dr_mpt_ops", "backups"}
+DATA_EXCLUDE = {".google-venv", "hermes_mpt_kb", "hermes_mpt_ops", "backups"}
 
 # ── helpers ──────────────────────────────────────────────
 

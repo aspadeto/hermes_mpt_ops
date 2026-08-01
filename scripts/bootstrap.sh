@@ -18,8 +18,8 @@ set -euo pipefail
 
 # ── Config ──────────────────────────────────────────────────────────────────
 HERMES_DATA="${HERMES_DATA:-$HOME/hermes-data}"
-OPS_URL="https://github.com/aspadeto/dr_mpt_ops.git"
-KB_URL="https://github.com/aspadeto/dr_mpt_kb.git"
+OPS_URL="https://github.com/aspadeto/hermes_mpt_ops.git"
+KB_URL="https://github.com/aspadeto/hermes_mpt_kb.git"
 RESTORE_BACKUP=""
 
 # ── Args ────────────────────────────────────────────────────────────────────
@@ -47,16 +47,16 @@ fi
 mkdir -p "$HERMES_DATA"
 cd "$HERMES_DATA"
 
-if [[ ! -d dr_mpt_ops/.git ]]; then
-  git clone "https://${TOKEN}@github.com/aspadeto/dr_mpt_ops.git" && ok "dr_mpt_ops clonado"
+if [[ ! -d hermes_mpt_ops/.git ]]; then
+  git clone "https://${TOKEN}@github.com/aspadeto/hermes_mpt_ops.git" && ok "hermes_mpt_ops clonado"
 else
-  ok "dr_mpt_ops já existe"
+  ok "hermes_mpt_ops já existe"
 fi
 
-if [[ ! -d dr_mpt_kb/.git ]]; then
-  git clone "https://${TOKEN}@github.com/aspadeto/dr_mpt_kb.git" && ok "dr_mpt_kb clonado"
+if [[ ! -d hermes_mpt_kb/.git ]]; then
+  git clone "https://${TOKEN}@github.com/aspadeto/hermes_mpt_kb.git" && ok "hermes_mpt_kb clonado"
 else
-  ok "dr_mpt_kb já existe"
+  ok "hermes_mpt_kb já existe"
 fi
 
 # Credencial helper (push automático futuro)
@@ -91,9 +91,9 @@ fi
 # ── Fase 4: Criar .env ──────────────────────────────────────────────────────
 log "Fase 4: Criando .env do Docker"
 
-ENV_FILE="$HERMES_DATA/dr_mpt_ops/docker/.env"
+ENV_FILE="$HERMES_DATA/hermes_mpt_ops/docker/.env"
 if [[ ! -f "$ENV_FILE" ]]; then
-  cp "$HERMES_DATA/dr_mpt_ops/docker/.env-default" "$ENV_FILE"
+  cp "$HERMES_DATA/hermes_mpt_ops/docker/.env-default" "$ENV_FILE"
   echo ""
   echo "  ⚠️  Edite $ENV_FILE e preencha:"
   echo "      HERMES_WEBUI_PASSWORD=  (senha do WebUI)"
@@ -107,7 +107,7 @@ fi
 # ── Fase 5: Subir ambiente ──────────────────────────────────────────────────
 log "Fase 5: Subindo containers"
 
-cd "$HERMES_DATA/dr_mpt_ops/docker"
+cd "$HERMES_DATA/hermes_mpt_ops/docker"
 docker compose up -d
 sleep 5
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8787 --connect-timeout 5 | grep -q 200 \
@@ -131,6 +131,6 @@ echo ""
 echo "  WebUI:  https://as7-hermes-docker.tail15f7e7.ts.net (ou http://localhost:8787)"
 echo "  Próximos passos:"
 echo "    - Verificar Telegram: envie msg ao bot"
-echo "    - Verificar pendências: $HERMES_DATA/dr_mpt_ops/scripts/pendencia.py stats"
-echo "    - Rodar backup inicial: $HERMES_DATA/dr_mpt_ops/scripts/hermes-backup.py"
+echo "    - Verificar pendências: $HERMES_DATA/hermes_mpt_ops/scripts/pendencia.py stats"
+echo "    - Rodar backup inicial: $HERMES_DATA/hermes_mpt_ops/scripts/hermes-backup.py"
 echo "    - Reconfigurar cron jobs (auto-commit, lembretes, backup)"

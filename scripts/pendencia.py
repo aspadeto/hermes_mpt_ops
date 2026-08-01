@@ -11,7 +11,7 @@ Fluxo:
   3. Quando o usuário está disponível, HAL apresenta as pendências
      uma a uma e as resolve com `resolve <id>`.
 
-Banco: SQLite em /opt/data/hermes-data/dr_mpt_ops/data/pendencias.db (persistente, fora do git).
+Banco: SQLite em /opt/data/hermes-data/hermes_mpt_ops/data/pendencias.db (persistente, fora do git).
 
 Uso:
   pendencia.py add --titulo "..." [--contexto "caminho/doc"] [--tipo confirmacao|decisao|revisao|outro] [--prioridade alta|media|baixa]
@@ -29,7 +29,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-DB_PATH = Path("/opt/data/hermes-data/dr_mpt_ops/data/pendencias.db")
+DB_PATH = Path("/opt/data/hermes-data/hermes_mpt_ops/data/pendencias.db")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS pendencias (
