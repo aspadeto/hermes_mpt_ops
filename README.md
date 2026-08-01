@@ -12,7 +12,7 @@ Complementar ao [dr_mpt_kb](https://github.com/aspadeto/dr_mpt_kb) (conhecimento
 ## 1. Visão Geral da Infraestrutura
 
 O ambiente roda o **Hermes Agent** com a **Hermes WebUI** em dois containers conectados
-(via Docker Compose no host), acessíveis remotamente via **Tailscale**.
+(via Docker Compose), acessíveis remotamente via **Tailscale**.
 
 | Componente | Endereço | Porta |
 |-----------|----------|-------|
@@ -22,14 +22,20 @@ O ambiente roda o **Hermes Agent** com a **Hermes WebUI** em dois containers con
 
 > Detalhes completos do Tailscale (grants, serve, SSH): `wiki/referencias/tailscale-acesso-remoto.md`
 
-### Estrutura de Volumes (host → container)
+### Compose e Volumes
 
-| Pasta no host | Montagem no container | Conteúdo |
-|---------------|----------------------|----------|
-| `~/.hermes` | `/home/hermes/.hermes` | Config, sessões, skills, memória, cache |
-| `~/hermes-agent` | `/opt/hermes` | Código-fonte do Hermes Agent |
-| `~/hermes-data` | `/opt/data/hermes-data` | **Este repositório** + wiki + tokens |
-| `~/workspace` | `/workspace` | Área de trabalho (WebUI) |
+O compose vive em **`docker/`** e é parametrizado via `.env` (veja abaixo):
+
+| Variável (`.env`) | Host (default) | Container | Conteúdo |
+|-------------------|---------------|-----------|----------|
+| `HOST_HERMES_HOME` | `${HOME}/.hermes` | `/home/hermes/.hermes` (agent) / `/home/hermeswebui/.hermes` (webui) | Config, sessões, skills, memória, cache |
+| `HOST_HERMES_DATA` | `${HOME}/hermes-data` | `/opt/data/hermes-data` | **Este repositório** + wiki + tokens |
+| `HOST_HERMES_WEBUI_WORKSPACE` | `${HOME}/hermes-data/hermes-webui/workspace` | `/workspace` | Área de trabalho (WebUI) |
+| `hermes-agent-src` (volume Docker) | — | `/opt/hermes` | Código-fonte do Hermes Agent (volume nomeado) |
+
+> 💡 Os valores usam `${HOME}` — o Compose expande com o home real do usuário do
+> host, tornando o `.env` portátil entre máquinas. Só use caminho absoluto se o
+> layout do host for atípico.
 
 > **Nota:** O container usa UID/GID `1000` por padrão. Se seu usuário host tem UID
 > diferente, ajuste no `.env`: `echo "UID=$(id -u)" >> .env` e `GID=$(id -g)`.
@@ -42,8 +48,10 @@ O ambiente roda o **Hermes Agent** com a **Hermes WebUI** em dois containers con
 dr_mpt_ops/
 ├── scripts/     ← todos os scripts (dados + automação)
 ├── data/        ← bancos SQLite versionados (pendencias.db, prt14.db)
-├── configs/     ← templates de configuração SEM segredos (.env.example, compose.example)
-└── docs/        ← notas técnicas de infra
+├── docker/      ← docker-compose.yml + .env-default (template SEM segredos)
+├── configs/     ← reservado p/ templates de config (.env.example, compose.example)
+├── docs/        ← notas técnicas de infra (ex: RUNBOOK-RECUPERACAO.md)
+└── bin/         ← (removido — scripts consolidados em scripts/)
 ```
 
 ---
@@ -59,7 +67,8 @@ dr_mpt_ops/
 | `importar-execucao.py` | Importa execução orçamentária | — |
 | `hermes-backup.py` | Backup do Hermes para Google Drive | google-api (venv) |
 | `wiki-auto-commit.sh` | Auto-commit do KB + OPS (cron 10min) | git |
-| `update_hermes-agente-src.sh` | Recria volume do hermes-agent no Docker | docker |
+| `bootstrap.sh` | Reativação do ambiente em host novo (recuperação) | docker, git |
+| `update_hermes-agente-src.sh` | Recria o volume `hermes-agent-src` no Docker | docker |
 
 ### Wrappers de cron
 
@@ -84,6 +93,11 @@ git clone https://github.com/aspadeto/dr_mpt_ops.git
 # Venv para scripts com dependências (pdf2wiki, backup)
 uv venv .venv
 uv pip install pymupdf
+
+# Docker: configurar o .env a partir do template
+cd docker
+cp .env-default .env
+# preencher: HERMES_WEBUI_PASSWORD e API_SERVER_KEY (ver runbook)
 ```
 
 ---
@@ -98,28 +112,15 @@ docker compose down
 docker compose up -d
 ```
 
-### Atualizar a pasta de código-fonte (`~/hermes-agent`)
+### Atualizar o código-fonte do agente (volume `hermes-agent-src`)
 
-Como é bind mount, o Docker **não** atualiza a pasta do host automaticamente:
-
-**Opção A — Copiar da imagem (recomendado)**
-
-```bash
-docker create --name temp-hermes nousresearch/hermes-agent:latest
-rm -rf ~/hermes-agent/*
-docker cp temp-hermes:/opt/hermes/. ~/hermes-agent/
-docker rm temp-hermes
-```
-
-**Opção B — Clonar do GitHub**
+O volume nomeado `hermes-agent-src` NÃO é atualizado pelo `docker compose pull`.
+Use o script dedicado:
 
 ```bash
-git clone https://github.com/NousResearch/hermes-agent.git ~/hermes-agent
-# atualizar depois:
-cd ~/hermes-agent && git pull
+scripts/update_hermes-agente-src.sh
+# (faz: down → rm volume → pull → up)
 ```
-
-Após qualquer opção: `docker compose down && docker compose up -d`
 
 ---
 
@@ -136,14 +137,16 @@ Após qualquer opção: `docker compose down && docker compose up -d`
 ## 7. Segredos
 
 ⚠️ **NUNCA** commitar tokens, credentials ou `.env`. O `.gitignore` bloqueia
-`GITHUB_TOKEN.txt`, `.git-credentials`, `client_secret*.json`, `google_token.json` etc.
+`GITHUB_TOKEN.txt`, `.git-credentials`, `client_secret*.json`, `google_token.json`,
+`.env` e `.env.*` (com exceção do template `docker/.env-default`, sanitizado).
 
-Segredos vivem **fora** dos repositórios, na raiz de `hermes-data/`:
-- `GITHUB_TOKEN.txt` — token do GitHub (clones/push)
-- `.git-credentials` — credenciais git (store)
-- `.env` — variáveis de ambiente com chaves
+Segredos vivem **fora** dos repositórios:
+- `hermes-data/GITHUB_TOKEN.txt` — token do GitHub (clones/push)
+- `hermes-data/.git-credentials` — credenciais git (store)
+- `docker/.env` — segredos do Docker (senha WebUI, API key, caminhos)
+- `~/.hermes/.env` — segredos do Hermes (Telegram, OpenRouter)
 
-Para versionar configuração, usar **templates** em `configs/` (sem valores).
+Para versionar configuração, usar **templates** (ex: `docker/.env-default`) sem valores.
 
 ---
 
