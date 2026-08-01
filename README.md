@@ -1,11 +1,11 @@
-# DR MPT — Repositório de Operações (dr_mpt_ops)
+# DR MPT — Repositório de Operações (hermes_mpt_ops)
 
 Repositório de **engenharia e operações** da Diretoria Regional do MPT (Rondônia/Acre).
-Complementar ao [dr_mpt_kb](https://github.com/aspadeto/dr_mpt_kb) (conhecimento).
+Complementar ao [hermes_mpt_kb](https://github.com/aspadeto/hermes_mpt_kb) (conhecimento).
 
 **Divisão de trabalho:**
-- `dr_mpt_kb` = **conhecimento** — PGEAs, artigos, referências, processos (documentos)
-- `dr_mpt_ops` = **engenharia** — scripts, bancos de dados, configurações versionáveis
+- `hermes_mpt_kb` = **conhecimento** — PGEAs, artigos, referências, processos (documentos)
+- `hermes_mpt_ops` = **engenharia** — scripts, bancos de dados, configurações versionáveis
 
 ---
 
@@ -45,9 +45,9 @@ O compose vive em **`docker/`** e é parametrizado via `.env` (veja abaixo):
 ## 2. Estrutura do Repositório
 
 ```
-dr_mpt_ops/
+hermes_mpt_ops/
 ├── scripts/     ← todos os scripts (dados + automação)
-├── data/        ← bancos SQLite versionados (pendencias.db, prt14.db)
+├── data/        ← bancos SQLite versionados (pendencias.db, regional-orcamento.db)
 ├── docker/      ← docker-compose.yml + .env-default (template SEM segredos)
 ├── configs/     ← reservado p/ templates de config (.env.example, compose.example)
 ├── docs/        ← notas técnicas de infra (ex: RUNBOOK-RECUPERACAO.md)
@@ -60,13 +60,13 @@ dr_mpt_ops/
 
 | Script | Função | Depende de |
 |--------|--------|------------|
-| `pdf2wiki.py` | Converte PDF → Markdown + assets para o KB | pymupdf (venv) |
+| `pdf2kb.py` | Converte PDF → Markdown + assets para o KB | pymupdf (venv) |
 | `pendencia.py` | Sistema de pendências (TODO assíncrono) | sqlite3 (stdlib) |
-| `consultar.py` | Consultas SQL no prt14.db | — |
-| `importar-demandas.py` | Importa demandas do SGA para prt14.db | — |
+| `consultar.py` | Consultas SQL no regional-orcamento.db | — |
+| `importar-demandas.py` | Importa demandas do SGA para regional-orcamento.db | — |
 | `importar-execucao.py` | Importa execução orçamentária | — |
 | `hermes-backup.py` | Backup do Hermes para Google Drive | google-api (venv) |
-| `wiki-auto-commit.sh` | Auto-commit do KB + OPS (cron 10min) | git |
+| `kb-auto-commit.sh` | Auto-commit do KB + OPS (cron 10min) | git |
 | `bootstrap.sh` | Reativação do ambiente em host novo (recuperação) | docker, git |
 | `update_hermes-agente-src.sh` | Recria o volume `hermes-agent-src` no Docker | docker |
 
@@ -76,7 +76,7 @@ O cron do Hermes exige scripts reais em `~/.hermes/scripts/` (sem symlinks, sem
 argumentos, sem caminho absoluto — decisão de segurança do scheduler). O padrão é:
 
 ```
-dr_mpt_ops/scripts/          ← CÓDIGO REAL (versionado)
+hermes_mpt_ops/scripts/          ← CÓDIGO REAL (versionado)
 ~/.hermes/scripts/           ← WRAPPERS (atalhos p/ cron, não versionados)
 ```
 
@@ -88,9 +88,9 @@ dr_mpt_ops/scripts/          ← CÓDIGO REAL (versionado)
 
 ```bash
 # No host, clonar
-git clone https://github.com/aspadeto/dr_mpt_ops.git
+git clone https://github.com/aspadeto/hermes_mpt_ops.git
 
-# Venv para scripts com dependências (pdf2wiki, backup)
+# Venv para scripts com dependências (pdf2kb, backup)
 uv venv .venv
 uv pip install pymupdf
 
@@ -156,7 +156,7 @@ O ambiente é **replicável**: se o host falhar, o sistema pode ser reativado
 em uma máquina nova com:
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/aspadeto/dr_mpt_ops/main/scripts/bootstrap.sh) \
+bash <(curl -s https://raw.githubusercontent.com/aspadeto/hermes_mpt_ops/main/scripts/bootstrap.sh) \
   --restore-backup /caminho/hermes-backup-*.tar.gz
 ```
 
@@ -169,8 +169,8 @@ bash <(curl -s https://raw.githubusercontent.com/aspadeto/dr_mpt_ops/main/script
 
 | Camada | Fonte |
 |--------|-------|
-| Engenharia (scripts, docker, bancos) | `dr_mpt_ops` (git) |
-| Conhecimento (wiki) | `dr_mpt_kb` (git) |
+| Engenharia (scripts, docker, bancos) | `hermes_mpt_ops` (git) |
+| Conhecimento (wiki) | `hermes_mpt_kb` (git) |
 | Identidade (config, memória, tokens) | **Backup Google Drive** (diário) |
 
 > ⚠️ **2 segredos não estão em nenhum backup** (vivem no `.env` local):

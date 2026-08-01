@@ -4,8 +4,8 @@
 em um host novo, quando o computador da VM atual falhar.
 
 **Princípio:** `git` + `backup do Google Drive` cobrem 100% do ambiente.
-- `dr_mpt_ops` (este repo) → engenharia (scripts, docker, bancos)
-- `dr_mpt_kb` → conhecimento (wiki)
+- `hermes_mpt_ops` (este repo) → engenharia (scripts, docker, bancos)
+- `hermes_mpt_kb` → conhecimento (wiki)
 - **Backup do Drive** → identidade (config, memória, tokens, sessões)
 
 **Tempo estimado:** 1-2 horas (a maior parte é download/instalação).
@@ -16,7 +16,7 @@ em um host novo, quando o computador da VM atual falhar.
 
 | Item | Onde obter |
 |------|-----------|
-| Acesso ao GitHub (token) | Repositórios privados `aspadeto/dr_mpt_ops` e `aspadeto/dr_mpt_kb` |
+| Acesso ao GitHub (token) | Repositórios privados `aspadeto/hermes_mpt_ops` e `aspadeto/hermes_mpt_kb` |
 | Acesso ao Google Drive | Pasta `HermesBackup` (backups diários) |
 | Conta Tailscale | `as7-hermes-docker` (mesma tailnet) |
 | Docker + Docker Compose | Instalar no host novo |
@@ -50,8 +50,8 @@ export GITHUB_TOKEN=$(cat GITHUB_TOKEN.txt)  # ou cole o token
 
 # 2.2 Clonar
 mkdir -p ~/hermes-data && cd ~/hermes-data
-git clone https://github.com/aspadeto/dr_mpt_ops.git
-git clone https://github.com/aspadeto/dr_mpt_kb.git
+git clone https://github.com/aspadeto/hermes_mpt_ops.git
+git clone https://github.com/aspadeto/hermes_mpt_kb.git
 
 # 2.3 Credencial git (para push automático)
 git config --global credential.helper "store --file=/opt/data/hermes-data/.git-credentials"
@@ -87,7 +87,7 @@ cp -a restore/data/.git-credentials ~/hermes-data/
 ## FASE 4 — Criar o .env do Docker
 
 ```bash
-cd ~/hermes-data/dr_mpt_ops/docker
+cd ~/hermes-data/hermes_mpt_ops/docker
 cp .env-default .env
 # Editar .env com os valores reais (ver "Segredos" abaixo):
 #   - HERMES_WEBUI_PASSWORD
@@ -107,7 +107,7 @@ nano .env
 ## FASE 5 — Subir o ambiente
 
 ```bash
-cd ~/hermes-data/dr_mpt_ops/docker
+cd ~/hermes-data/hermes_mpt_ops/docker
 docker compose up -d
 
 # Verificar
@@ -140,9 +140,9 @@ sudo tailscale up --ssh
 | WebUI | `curl -s http://localhost:8787` | 200 |
 | Telegram | enviar mensagem ao bot | responde |
 | API | `curl -s http://localhost:8642/health` | OK |
-| Backup | rodar `~/hermes-data/dr_mpt_ops/scripts/hermes-backup.py` | upload OK |
+| Backup | rodar `~/hermes-data/hermes_mpt_ops/scripts/hermes-backup.py` | upload OK |
 | Pendências | `pendencia.py stats` | mostra banco |
-| Wiki | `git -C ~/hermes-data/dr_mpt_kb status` | limpo |
+| Wiki | `git -C ~/hermes-data/hermes_mpt_kb status` | limpo |
 | Cron | `hermes cron list` | jobs ativos |
 
 ---
@@ -167,13 +167,13 @@ sudo tailscale up --ssh
 - **Uso:** push automático (cron) dos repos KB e OPS
 
 ## 3. HERMES_WEBUI_PASSWORD (senha do WebUI)
-- **Local:** `~/hermes-data/dr_mpt_ops/docker/.env` (linha `HERMES_WEBUI_PASSWORD=`)
+- **Local:** `~/hermes-data/hermes_mpt_ops/docker/.env` (linha `HERMES_WEBUI_PASSWORD=`)
 - **Como criar:** senha forte própria (ex: gerar com `openssl rand -base64 24`)
 - **Uso:** login no WebUI (obrigatória quando exposto além de localhost)
 - **⚠️ Importante:** guardar em gerenciador de senhas — sem ela, não há acesso ao WebUI
 
 ## 4. API_SERVER_KEY (chave da API do Hermes)
-- **Local:** `~/hermes-data/dr_mpt_ops/docker/.env` (linha `API_SERVER_KEY=`)
+- **Local:** `~/hermes-data/hermes_mpt_ops/docker/.env` (linha `API_SERVER_KEY=`)
 - **Como criar:** é uma chave local de API — gerar com `openssl rand -hex 32`
 - **Uso:** autenticação entre WebUI e Agent (env var interpolada pelo compose)
 - **⚠️ Importante:** se trocar, atualizar também onde o WebUI referencia a API
