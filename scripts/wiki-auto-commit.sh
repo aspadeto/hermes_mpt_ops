@@ -1,20 +1,40 @@
 #!/bin/bash
-# Auto-commit script for wiki-prt14
-# Commits and pushes any uncommitted changes to GitHub
-WIKI_PATH="${WIKI_PATH:-/opt/data/hermes-data/wiki}"
+# Auto-commit script — DR MPT (KB + OPS)
+# Commits and pushes any uncommitted changes to GitHub for both repos:
+#   - dr_mpt_kb  (conhecimento)  /opt/data/hermes-data/wiki
+#   - dr_mpt_ops (engenharia)    /opt/data/hermes-data/dr_mpt_ops
+# Usado pelo cron (a cada 10 min). Silencioso quando não há mudanças.
 
-cd "$WIKI_PATH" || exit 1
+REPOS=(
+  "/opt/data/hermes-data/wiki:dr_mpt_kb"
+  "/opt/data/hermes-data/dr_mpt_ops:dr_mpt_ops"
+)
 
-# Check if there are any changes
-if [[ -z $(git status --porcelain) ]]; then
-    # No changes, nothing to do
-    exit 0
-fi
+for entry in "${REPOS[@]}"; do
+  repo_path="${entry%%:*}"
+  repo_name="${entry##*:}"
 
-# Add all changes, commit, and push
-git add -A
-git commit -m "feat: sync automático $(date '+%Y-%m-%d %H:%M')"
-git pull --rebase origin main 2>/dev/null || true
-git push origin main 2>&1
+  cd "$repo_path" 2>/dev/null || { echo "ERRO [$repo_name]: pasta não existe: $repo_path"; continue; }
+
+  # Sem mudanças → próximo
+  if [[ -z $(git status --porcelain) ]]; then
+    continue
+  fi
+
+  # Commit + push (com rebase para evitar conflitos)
+  git add -A
+  git commit -m "feat: sync automático $(date '+%Y-%m-%d %H:%M') [$repo_name]" 2>/dev/null || true
+
+  # Se não há remote configurado, apenas commita localmente
+  if ! git remote get-url origin >/dev/null 2>&1; then
+    echo "ℹ️  [$repo_name] sem remote configurado — commit local apenas"
+    continue
+  fi
+
+  git pull --rebase origin main 2>/dev/null || true
+  git push origin main 2>&1 | grep -v "^$" | head -3
+
+  echo "✅ [$repo_name] sync OK"
+done
 
 exit 0
