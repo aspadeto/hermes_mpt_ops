@@ -147,7 +147,35 @@ Para versionar configuração, usar **templates** em `configs/` (sem valores).
 
 ---
 
-## 8. Limitações Conhecidas
+## 8. Recuperação de Desastre
+
+O ambiente é **replicável**: se o host falhar, o sistema pode ser reativado
+em uma máquina nova com:
+
+```bash
+bash <(curl -s https://raw.githubusercontent.com/aspadeto/dr_mpt_ops/main/scripts/bootstrap.sh) \
+  --restore-backup /caminho/hermes-backup-*.tar.gz
+```
+
+**Documentação completa:**
+- 📋 **[docs/RUNBOOK-RECUPERACAO.md](docs/RUNBOOK-RECUPERACAO.md)** — passo a passo
+  detalhado (7 fases) + **como criar/obter cada segredo** (10 segredos documentados)
+- ⚙️ **`scripts/bootstrap.sh`** — automação das fases 2-6 (clone, restore, .env, up)
+
+**Cobertura da recuperação:**
+
+| Camada | Fonte |
+|--------|-------|
+| Engenharia (scripts, docker, bancos) | `dr_mpt_ops` (git) |
+| Conhecimento (wiki) | `dr_mpt_kb` (git) |
+| Identidade (config, memória, tokens) | **Backup Google Drive** (diário) |
+
+> ⚠️ **2 segredos não estão em nenhum backup** (vivem no `.env` local):
+> `HERMES_WEBUI_PASSWORD` e `API_SERVER_KEY`. **Guardar em gerenciador de senhas.**
+
+---
+
+## 9. Limitações Conhecidas
 
 - Ferramentas acionadas da WebUI rodam no container da WebUI, **não** no agente (issue #681 do hermes-webui)
 - O Gateway API fica exposto apenas em `localhost` por padrão
