@@ -7,9 +7,9 @@ services:
       - "127.0.0.1:8642:8642"
       - "127.0.0.1:9119:9119"
     volumes:
-      - ${HOME}/.hermes:/home/hermes/.hermes
+      - ${HOST_HERMES_HOME:-${HOME}/.hermes}:/home/hermes/.hermes
+      - ${HOST_HERMES_DATA:-${HOME}/hermes-data}:/opt/data/hermes-data
       - hermes-agent-src:/opt/hermes
-      - ${HOME}/hermes-data:/opt/data/hermes-data
     environment:
       - HERMES_HOME=/home/hermes/.hermes
       - HERMES_UID=${UID:-1000}
@@ -32,9 +32,9 @@ services:
     ports:
       - "8787:8787"
     volumes:
-      - ${HOME}/.hermes:/home/hermeswebui/.hermes
+      - ${HOST_HERMES_HOME:-${HOME}/.hermes}:/home/hermeswebui/.hermes
+      - ${HOST_HERMES_WEBUI_WORKSPACE:-${HOME}/hermes-data/hermes-webui/workspace}:/workspace
       - hermes-agent-src:/home/hermeswebui/.hermes/hermes-agent:ro
-      - ${HERMES_WORKSPACE:-${HOME}/hermes-data/hermes-webui/workspace}:/workspace
     environment:
       - HERMES_WEBUI_HOST=0.0.0.0
       - HERMES_WEBUI_PORT=8787
