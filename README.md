@@ -1,4 +1,4 @@
-# MPT — Repositório de Operações (hermes_mpt_ops)
+# Repositório de Operações (hermes_mpt_ops)
 
 Repositório de **engenharia e operações** da Diretoria Regional do MPT (Rondônia/Acre).
 Complementar ao [hermes_mpt_kb](https://github.com/aspadeto/hermes_mpt_kb) (conhecimento).
