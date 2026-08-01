@@ -95,6 +95,13 @@ cp .env-default .env
 nano .env
 ```
 
+> 💡 **Caminhos do host:** o `.env-default` já traz os volumes compartilhados
+> parametrizados com `${HOME}` (`HOST_HERMES_HOME`, `HOST_HERMES_DATA`,
+> `HOST_HERMES_WEBUI_WORKSPACE`) — o Docker Compose expande `${HOME}` com o
+> home real do usuário do host, então **não é preciso editar** (funciona em
+> qualquer máquina). Só altere para caminho absoluto se o layout do host
+> for atípico (ex: dados em disco separado).
+
 ---
 
 ## FASE 5 — Subir o ambiente
@@ -231,6 +238,10 @@ sudo tailscale up --ssh
 | Google OAuth | `~/.hermes/google_*` | ✅ | Google Cloud Console |
 | Himalaya (Gmail) | `~/.config/himalaya/` | ✅ (no .hermes? verificar) | Google App passwords |
 | Tailscale | conta online | — | `tailscale up` |
+
+> **Nota:** as variáveis `HOST_HERMES_HOME`, `HOST_HERMES_DATA` e
+> `HOST_HERMES_WEBUI_WORKSPACE` (caminhos de volume) **não são segredos** —
+> usam `${HOME}` e não precisam de edição manual.
 
 > **Nota importante:** os segredos marcados como "❌ (manual)" (WEBUI_PASSWORD e
 > API_SERVER_KEY) **não estão no backup** porque vivem no `.env` do docker, que é
