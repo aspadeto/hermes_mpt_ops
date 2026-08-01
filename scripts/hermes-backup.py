@@ -39,8 +39,9 @@ EXCLUDE_PATTERNS = [
     ".skills_prompt_snapshot.json",
 ]
 
-# Excluded from data/ (backups is its own rotation target, wiki is git-managed)
-DATA_EXCLUDE = {".google-venv"}
+# Excluded from data/ — repos git (wiki, dr_mpt_ops) são versionados no GitHub,
+# backups/ é alvo da rotação, .google-venv é ambiente
+DATA_EXCLUDE = {".google-venv", "wiki", "dr_mpt_ops", "backups"}
 
 # ── helpers ──────────────────────────────────────────────
 
