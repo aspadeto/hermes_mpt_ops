@@ -24,6 +24,7 @@ DRIVE_FOLDER_NAME = "HermesBackup"
 EXCLUDE_PATTERNS = [
     "cache/",
     "home/",
+    ".ssh/",  # chaves privadas — nunca ir para o backup (Drive)
     "audio_cache/",
     "image_cache/",
     "lazy-packages/",
