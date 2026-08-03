@@ -1,7 +1,12 @@
-# Repositório de Operações (hermes_mpt_ops)
+# DR MPT — Repositório de Operações (hermes_mpt_ops)
 
 Repositório de **engenharia e operações** da Diretoria Regional do MPT (Rondônia/Acre).
 Complementar ao [hermes_mpt_kb](https://github.com/aspadeto/hermes_mpt_kb) (conhecimento).
+
+> 🤖 **Agentes (Hermes, Claude Code, Copilot):** leia o
+> **[AGENTS.md](AGENTS.md)** — diretrizes comportamentais adaptadas do
+> [CLAUDE.md de Andrej Karpathy](https://github.com/multica-ai/andrej-karpathy-skills)
+> (simplicidade, mudanças cirúrgicas, pensar antes de agir).
 
 **Divisão de trabalho:**
 - `hermes_mpt_kb` = **conhecimento** — PGEAs, artigos, referências, processos (documentos)
