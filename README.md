@@ -55,7 +55,7 @@ hermes_mpt_ops/
 ├── data/        ← bancos SQLite versionados (pendencias.db, regional-orcamento.db)
 ├── docker/      ← docker-compose.yml + .env-default (template SEM segredos)
 ├── configs/     ← reservado p/ templates de config (.env.example, compose.example)
-├── docs/        ← notas técnicas de infra (ex: RUNBOOK-RECUPERACAO.md)
+├── docs/        ← runbooks e notas de infra (recuperação, SSH host)
 └── bin/         ← (removido — scripts consolidados em scripts/)
 ```
 
