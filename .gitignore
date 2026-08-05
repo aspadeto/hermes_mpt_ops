@@ -31,3 +31,5 @@ Thumbs.db
 # Banco de dados temporários/regeneráveis (exceto os versionados explicitamente)
 # OBS: pendencias.db É versionado (exceção abaixo)
 !data/pendencias.db
+# OBS: processos.db É versionado (compreensão causal de PGEAs — ago/2026)
+!data/processos.db
