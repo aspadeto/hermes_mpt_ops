@@ -38,7 +38,7 @@ artigos) processado pelo agente.
 ```
 ┌─ /workspace (WebUI) ──────────────────────────────────────────┐
 │ ① PDF chega (upload/arraste no chat ou no workspace)          │
-│ ② Auditoria roda: python3 <OPS>/scripts/audit_pgea.py PGEA.pdf │
+│ ② Auditoria roda: python3 <OPS>/scripts/extrair_auditar_pgea.py PGEA.pdf │
 │    → gera PGEA_*.md (extração) + auditoria_PGEA_*.md          │
 │ ③ Você valida o relatório (decisão final é humana)            │
 └───────────────────────────────┬───────────────────────────────┘
@@ -62,7 +62,7 @@ artigos) processado pelo agente.
 | # | Ação | Comando / local |
 |---|------|-----------------|
 | ① | PDF chega | `/workspace` (WebUI) |
-| ② | Auditoria | `python3 /opt/data/hermes-data/hermes_mpt_ops/scripts/audit_pgea.py /workspace/PGEA_*.pdf` |
+| ② | Auditoria | `python3 /opt/data/hermes-data/hermes_mpt_ops/scripts/extrair_auditar_pgea.py /workspace/PGEA_*.pdf` |
 | ③ | Validação humana | relatório `auditoria_*.md` — suspeitas → judge LLM amostral |
 | ④ | PDF → KB | `cp PGEA.pdf KB/raw/pgeas/` (verificar sha256) |
 | ⑤ | Extração → KB | pasta `KB/pgeas/<slug>/extracao.md` (usar pasta existente se o PGEA já tiver; ex: `pgea-biblioteca`) |
@@ -82,11 +82,11 @@ artigos) processado pelo agente.
 | Pasta de PGEA | `pgeas/pgea-<num>-<ano>/` | `pgeas/pgea-337-2026/` |
 | Extração | `extracao.md` (frontmatter YAML obrigatório) | `pgeas/pgea-337-2026/extracao.md` |
 | Relatório no OPS | `data/auditorias/auditoria-pgea-<num>-<ano>.md` | `auditoria-pgea-337-2026.md` |
-| Script | `scripts/<verbo>_<alvo>.py` | `scripts/audit_pgea.py` |
+| Script | `scripts/<verbo>_<alvo>.py` | `scripts/extrair_auditar_pgea.py` |
 
 ---
 
-## 5. Ferramenta de auditoria (`scripts/audit_pgea.py`)
+## 5. Ferramenta de extração + auditoria (`scripts/extrair_auditar_pgea.py`)
 
 Valida a extração de um PGEA em 3 camadas (custo zero):
 

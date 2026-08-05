@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""audit_pgea.py — Auditoria de extração de PGEA (autos digitais MPT).
+"""extrair_auditar_pgea.py — Extrai e audita PGEAs (autos digitais MPT).
+
+Extrai o PDF para Markdown por peça E audita a extração num comando só.
 
 Camada 1+2 (zero custo): inventário de peças + páginas vazias/escaneadas.
 Camada 3 (opcional): extrai o PDF → MD por peça e audita a extração
 (completude, cobertura, fidelidade — páginas pequenas comparadas por conteúdo).
 
 Uso:
-    audit_pgea.py <PGEA.pdf> [--sem-extracao] [--saida DIR]
+    extrair_auditar_pgea.py <PGEA.pdf> [--sem-extracao] [--saida DIR]
 """
 import fitz, re, sys
 from pathlib import Path

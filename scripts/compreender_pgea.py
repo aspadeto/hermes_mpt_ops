@@ -2,8 +2,9 @@
 """compreender_pgea.py — Rascunho da compreensão causal de um PGEA.
 
 Regras primeiro (zero custo): lê o extracao.md auditado, detecta peças
-(HEADER_RE do audit_pgea.py), datas e infere a função causal por heurística
-de tipo de peça + verbo do despacho. Marca DÚVIDAS para revisão do LLM/usuário.
+(HEADER_RE do extrair_auditar_pgea.py), datas e infere a função causal por
+heurística de tipo de peça + verbo do despacho. Marca DÚVIDAS para revisão
+do LLM/usuário.
 
 Uso:
     compreender_pgea.py <extracao.md>                 # rascunho da tabela em stdout
