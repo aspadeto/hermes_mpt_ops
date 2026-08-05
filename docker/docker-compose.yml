@@ -33,6 +33,7 @@ services:
       - "8787:8787"
     volumes:
       - ${HOST_HERMES_HOME:-${HOME}/.hermes}:/home/hermeswebui/.hermes
+      - ${HOST_HERMES_DATA:-${HOME}/hermes-data}:/opt/data/hermes-data
       - ${HOST_HERMES_WEBUI_WORKSPACE:-${HOME}/hermes-data/hermes-webui/workspace}:/workspace
       - hermes-agent-src:/home/hermeswebui/.hermes/hermes-agent:ro
     environment:
