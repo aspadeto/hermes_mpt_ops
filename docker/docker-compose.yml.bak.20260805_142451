@@ -50,19 +50,6 @@ services:
     restart: unless-stopped
     networks:
       - hermes-net
-  browser:
-    image: ghcr.io/browserless/chromium:latest
-    container_name: hermes-browser
-    restart: unless-stopped
-    shm_size: 2gb
-    environment:
-      - CONCURRENT=10
-      - TIMEOUT=300000
-      - HEALTH=true
-      - MAX_QUEUE_LENGTH=20
-    networks:
-      - hermes-net
-
 networks:
   hermes-net:
     driver: bridge
