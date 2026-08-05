@@ -12,6 +12,9 @@ Complementar ao [hermes_mpt_kb](https://github.com/aspadeto/hermes_mpt_kb) (conh
 - `hermes_mpt_kb` = **conhecimento** — PGEAs, artigos, referências, processos (documentos)
 - `hermes_mpt_ops` = **engenharia** — scripts, bancos de dados, configurações versionáveis
 
+> 📥 **Ingestão de documentos:** veja [docs/FLUXO-INGESTAO.md](docs/FLUXO-INGESTAO.md) —
+> caminho padrão do PDF → auditoria → KB/OPS (sem duplicação).
+
 ---
 
 ## 1. Visão Geral da Infraestrutura
