@@ -351,23 +351,28 @@ def main():
         rel.append("  → Solução: extrair texto manualmente e verificar.")
 
     # Camada 3
+    n_susp = "n/a"
     if not sem_ext and atos:
         md_path = outdir / f"{pdf.stem}.md"
         md_path.write_text(extrair_md(doc, atos, titulo, sumario_linhas), encoding="utf-8")
 
         md_text = md_path.read_text(encoding="utf-8")
         rel.append(f"\n📄 **Extração gerada:** `{md_path.name}`\n")
-        rel.append(auditar_extracao(doc, md_text, atos, chars, TOTAL_PAGS))
+        audit_text = auditar_extracao(doc, md_text, atos, chars, TOTAL_PAGS)
+        rel.append(audit_text)
+        m_susp = re.search(r"Pontos suspeitos: (\d+)", audit_text)
+        n_susp = int(m_susp.group(1)) if m_susp else "n/a"
 
     elif sem_ext:
         rel.append("\n📄 Extração omitida (--sem-extracao)")
+        n_susp = "n/a"
 
     doc.close()
 
     # Salvar relatório
     out = outdir / f"auditoria_{pdf.stem}.md"
     out.write_text("\n".join(rel), encoding="utf-8")
-    print(f"✅ {out.name} — {len(atos)} atos, {len(vazias)} vazias, suspeitas: {suspeitas if not sem_ext and atos else 'n/a'}")
+    print(f"✅ {out.name} — {len(atos)} atos, {len(vazias)} vazias, suspeitas: {n_susp}")
 
 
 if __name__ == "__main__":
