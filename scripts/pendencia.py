@@ -118,6 +118,10 @@ def cmd_cancel(args):
     conn.close()
 
 
+PRIO_EMOJI = {"alta": "🔴", "media": "🟡", "baixa": "🟢"}
+TIPO_LABEL = {"confirmacao": "Confirmação", "decisao": "Decisão", "revisao": "Revisão", "outro": "Outro"}
+
+
 def cmd_remind(args):
     """Gera mensagem de lembrete. Saída vazia = nada pendente (cron silencioso)."""
     conn = conectar()
@@ -132,11 +136,21 @@ def cmd_remind(args):
 
     n = len(rows)
     altas = sum(1 for r in rows if r[4] == "alta")
-    print(f"⏳ Você tem {n} pendência(s) aguardando — {altas} de prioridade alta.")
-    print(f"Me diga 'resolver pendências' quando estiver disponível que eu apresento uma a uma. 🙂")
+    print(f"## 📋 Pendências — {n} aguardando ({altas} 🔴)")
+    print()
+    print("| # | Prio | Tipo | Assunto |")
+    print("|---|------|------|---------|")
     for r in rows:
         pid, titulo, ctx, tipo, prio, status, criada, resolvida = r
-        print(f"  • #{pid} [{prio}] {titulo}" + (f" ({ctx})" if ctx else ""))
+        emoji = PRIO_EMOJI.get(prio, "⚪")
+        label = TIPO_LABEL.get(tipo, tipo)
+        titulo_curto = titulo if len(titulo) <= 60 else titulo[:57] + "..."
+        print(f"| {pid} | {emoji} | {label} | {titulo_curto} |")
+    if altas:
+        print()
+        print(f"🔴 **{altas} de prioridade alta** — veja primeiro")
+    print()
+    print('➡️ Responda **"resolver pendências"** para revisar uma a uma. 🙂')
 
 
 def cmd_stats(args):
