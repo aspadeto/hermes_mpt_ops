@@ -1,12 +1,17 @@
-# RUNBOOK — Recuperação de Desastre do Ambiente Hermes PRT14
+# RUNBOOK — Recuperação de Desastre do Ambiente Hermes
 
 **Objetivo:** reativar o ambiente completo (Hermes Agent + WebUI + Telegram + backups)
-em um host novo, quando o computador da VM atual falhar.
+em um host novo, quando a VM atual falhar.
 
 **Princípio:** `git` + `backup do Google Drive` cobrem 100% do ambiente.
-- `hermes_mpt_ops` (este repo) → engenharia (scripts, docker, bancos)
+- `hermes_mpt_ops` (este repo) → engenharia (scripts, bancos)
 - `hermes_mpt_kb` → conhecimento (wiki)
 - **Backup do Drive** → identidade (config, memória, tokens, sessões)
+
+> ⚠️ **Modelo atual (desde 07/08/2026): VM nativa** — SEM Docker, SEM Tailscale.
+> O agente roda como user service do systemd; a WebUI como daemon próprio; o acesso
+> remoto via Cloudflare Tunnel. Este runbook reflete esse modelo. O fluxo antigo
+> (containers) ficou no histórico dos commits.
 
 **Tempo estimado:** 1-2 horas (a maior parte é download/instalação).
 
@@ -18,26 +23,25 @@ em um host novo, quando o computador da VM atual falhar.
 |------|-----------|
 | Acesso ao GitHub (token) | Repositórios privados `aspadeto/hermes_mpt_ops` e `aspadeto/hermes_mpt_kb` |
 | Acesso ao Google Drive | Pasta `HermesBackup` (backups diários) |
-| Conta Tailscale | `as7-hermes-docker` (mesma tailnet) |
-| Docker + Docker Compose | Instalar no host novo |
-| Conta no Telegram | O bot precisa do token (ver Fase 2) |
+| Conta Cloudflare | Dashboard com o **token do tunnel** (não migra em backup) |
+| Conta no Telegram | O bot precisa do token (ver Fase 4) |
 
 ---
 
 ## FASE 1 — Instalar base no host novo
 
 ```bash
-# 1.1 Docker (Ubuntu 24.04)
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-
-# 1.2 Tailscale
-curl -fsSL https://tailscale.com/install.sh | sh
-sudo tailscale up        # autenticar com a mesma conta
-
-# 1.3 Ferramentas
-sudo apt install -y git curl python3-venv
+# 1.1 Ferramentas (Ubuntu 24.04)
+sudo apt update && sudo apt install -y git curl python3-venv
 curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 1.2 Cloudflared (túnel) — binário oficial
+curl -sL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+sudo install -m755 cloudflared /usr/local/bin/cloudflared
+
+# 1.3 (Opcional) Email via Himalaya — binário pré-compilado (não existe no apt/snap)
+curl -sL https://github.com/pimalaya/himalaya/releases/download/v2.0.0/himalaya.x86_64-linux.tgz -o h.tgz
+tar xzf h.tgz && install -m755 himalaya ~/.local/bin/himalaya
 ```
 
 ---
@@ -49,13 +53,21 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 export GITHUB_TOKEN=$(cat GITHUB_TOKEN.txt)  # ou cole o token
 
 # 2.2 Clonar
-mkdir -p ~/hermes-data && cd ~/hermes-data
+mkdir -p /opt/data && cd /opt/data
 git clone https://github.com/aspadeto/hermes_mpt_ops.git
 git clone https://github.com/aspadeto/hermes_mpt_kb.git
+mv hermes_mpt_ops hermes-data && mv hermes_mpt_kb hermes-data/  # layout final: /opt/data/hermes-data/{hermes_mpt_ops,hermes_mpt_kb}
+```
 
-# 2.3 Credencial git (para push automático)
-git config --global credential.helper "store --file=/opt/data/hermes-data/.git-credentials"
-# O arquivo .git-credentials é criado no primeiro push autenticado
+> Layout de referência: `/opt/data/hermes-data/` contém `hermes_mpt_kb/`,
+> `hermes_mpt_ops/`, `hermes-webui/workspace/` (balcão da WebUI), `.tool-venv/`,
+> `.google-venv/`.
+
+```bash
+# 2.3 Credencial git (push automático do cron)
+mkdir -p /home/hermes
+git config --global credential.helper "store --file=/home/hermes/.git-credentials"
+# O .git-credentials é criado no primeiro push autenticado
 ```
 
 ---
@@ -74,45 +86,71 @@ mkdir -p ~/restore && cd ~/restore
 tar xzf hermes-backup-*.tar.gz
 
 # 3.3 Restaurar ~/.hermes (config, memória, skills, tokens)
-#     CUIDADO: não sobrescrever skills/repos clonados se preferir
+#     CUIDADO: o tar preserva estrutura aninhada (.hermes/home/...) — usar --strip-components
 cp -a restore/.hermes ~/.hermes
 
-# 3.4 Restaurar tokens na raiz do hermes-data
-cp -a restore/data/GITHUB_TOKEN.txt ~/hermes-data/
-cp -a restore/data/.git-credentials ~/hermes-data/
+# 3.4 Restaurar tokens e credenciais (fora do hermes-data, por segurança)
+cp -a restore/.../GITHUB_TOKEN.txt /home/hermes/GITHUB_TOKEN.txt
+cp -a restore/.../.git-credentials /home/hermes/.git-credentials
+chmod 600 /home/hermes/GITHUB_TOKEN.txt /home/hermes/.git-credentials
+
+# 3.5 Config do email (Himalaya) — caminhos ajustados da migração
+mkdir -p ~/.config/himalaya
+cp -a restore/.../.config/himalaya/* ~/.config/himalaya/   # config.toml + get-password.sh + .gmail-app-password
+chmod 700 ~/.config/himalaya/get-password.sh
 ```
+
+> ⚠️ **Pitfalls conhecidos da restauração:** (1) `tar` com glob `*` não pega ocultos —
+> usar `--strip-components` ou mover explícito; (2) `sed -i` em `get-password.sh`
+> remove o bit de execução — refazer `chmod 700`; (3) venvs com symlink de python
+> quebrado → recriar com `uv --clear`.
 
 ---
 
-## FASE 4 — Criar o .env do Docker
+## FASE 4 — Configurar segredos
+
+Não há mais `.env` de Docker. Os segredos vivem em arquivos locais:
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| `~/.hermes/.env` | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`, `OPENROUTER_API_KEY` |
+| `~/hermes-webui/.env` | `HERMES_WEBUI_HOST=127.0.0.1`, `HERMES_WEBUI_PORT=8787`, `HERMES_WEBUI_PASSWORD=<senha>` |
+| `~/.hermes/auth.json` | credenciais Nous (restauradas no backup) |
 
 ```bash
-cd ~/hermes-data/hermes_mpt_ops/docker
-cp .env-default .env
-# Editar .env com os valores reais (ver "Segredos" abaixo):
-#   - HERMES_WEBUI_PASSWORD
-#   - API_SERVER_KEY
-nano .env
+# Exemplo do ~/.hermes/.env
+cat >> ~/.hermes/.env << 'EOF'
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_ALLOWED_USERS=...
+TELEGRAM_HOME_CHANNEL=...
+OPENROUTER_API_KEY=...
+EOF
+chmod 600 ~/.hermes/.env
 ```
-
-> 💡 **Caminhos do host:** o `.env-default` já traz os volumes compartilhados
-> parametrizados com `${HOME}` (`HOST_HERMES_HOME`, `HOST_HERMES_DATA`,
-> `HOST_HERMES_WEBUI_WORKSPACE`) — o Docker Compose expande `${HOME}` com o
-> home real do usuário do host, então **não é preciso editar** (funciona em
-> qualquer máquina). Só altere para caminho absoluto se o layout do host
-> for atípico (ex: dados em disco separado).
 
 ---
 
 ## FASE 5 — Subir o ambiente
 
 ```bash
-cd ~/hermes-data/hermes_mpt_ops/docker
-docker compose up -d
+# 5.1 Gateway (user service — Telegram + API)
+systemctl --user enable --now hermes-gateway.service
+
+# 5.2 WebUI (daemon próprio do hermes-webui)
+cd ~/hermes-webui && ./ctl.sh start
+
+# 5.3 Túnel Cloudflare (serviço de sistema, root)
+#     Token obtido no dashboard (Cloudflare → Zero Trust → Tunnels → seu tunnel)
+sudo mkdir -p /etc/cloudflared
+sudo tee /etc/cloudflared/token > /dev/null << 'EOF'
+<token-do-dashboard>
+EOF
+sudo systemctl enable --now cloudflared
 
 # Verificar
-docker compose ps
-curl -s http://localhost:8787 -o /dev/null -w "%{http_code}"   # espera 200
+systemctl --user status hermes-gateway.service
+~/hermes-webui/ctl.sh status
+curl -s http://127.0.0.1:8787 -o /dev/null -w "%{http_code}"   # espera 302 (login)
 ```
 
 ---
@@ -120,15 +158,13 @@ curl -s http://localhost:8787 -o /dev/null -w "%{http_code}"   # espera 200
 ## FASE 6 — Restaurar conectividade
 
 ```bash
-# 6.1 Tailscale serve (HTTPS do WebUI)
-sudo tailscale serve --bg http://127.0.0.1:8787
+# 6.1 O túnel do dashboard já mapeia o hostname → serviço local:
+#     https://webui-01.asideia.net  →  http://localhost:8787
+#     (conferir o ingress no dashboard; Cloudflare Access na frente)
+curl -s https://webui-01.asideia.net -o /dev/null -w "%{http_code}"
 
-# 6.2 Tailscale SSH
-sudo tailscale up --ssh
-
-# 6.3 Verificar acesso remoto
-#     https://as7-hermes-docker.tail15f7e7.ts.net  → WebUI
-#     ssh usuario@as7-hermes-docker                 → SSH
+# 6.2 SSH
+#     porta 22 padrão; usuário hermes. (Tailscale SSH não existe mais.)
 ```
 
 ---
@@ -137,20 +173,22 @@ sudo tailscale up --ssh
 
 | Check | Comando | Esperado |
 |-------|---------|----------|
-| WebUI | `curl -s http://localhost:8787` | 200 |
+| WebUI | `curl -s http://127.0.0.1:8787` | 302/200 |
+| WebUI remoto | `curl -s https://webui-01.asideia.net` | login (Access) |
 | Telegram | enviar mensagem ao bot | responde |
-| API | `curl -s http://localhost:8642/health` | OK |
-| Backup | rodar `~/hermes-data/hermes_mpt_ops/scripts/hermes-backup.py` | upload OK |
+| API | `curl -s http://127.0.0.1:20241/` | responde (404 genérico = vivo) |
+| Backup | rodar `hermes_mpt_ops/scripts/hermes-backup.py` | upload OK |
 | Pendências | `pendencia.py stats` | mostra banco |
-| Wiki | `git -C ~/hermes-data/hermes_mpt_kb status` | limpo |
+| Repos | `git -C /opt/data/hermes-data/hermes_mpt_kb status` | limpo |
 | Cron | `hermes cron list` | jobs ativos |
+| Git push | `git -C /opt/data/hermes-data/hermes_mpt_ops ls-remote origin HEAD` | autentica |
 
 ---
 
 # SEGREDOS — Como criar/obter cada um
 
 ## 1. GITHUB_TOKEN.txt
-- **Local:** `~/hermes-data/GITHUB_TOKEN.txt` (raiz, fora do git)
+- **Local:** `/home/hermes/GITHUB_TOKEN.txt` (fora do hermes-data)
 - **Como obter:** GitHub → Settings → Developer settings → Personal access tokens → Generate new token
   - Scope: `repo` (acesso a repos privados)
   - Expiração: 1 ano
@@ -158,47 +196,42 @@ sudo tailscale up --ssh
 - **Renovação:** lembrete agendado no Hermes (cron) antes de expirar
 
 ## 2. .git-credentials
-- **Local:** `~/hermes-data/.git-credentials`
+- **Local:** `/home/hermes/.git-credentials` (fora do hermes-data)
 - **Como criar:**
   ```bash
-  git config --global credential.helper "store --file=/opt/data/hermes-data/.git-credentials"
+  git config --global credential.helper "store --file=/home/hermes/.git-credentials"
   # no primeiro push autenticado, o git grava: https://usuario:TOKEN@github.com
   ```
 - **Uso:** push automático (cron) dos repos KB e OPS
 
 ## 3. HERMES_WEBUI_PASSWORD (senha do WebUI)
-- **Local:** `~/hermes-data/hermes_mpt_ops/docker/.env` (linha `HERMES_WEBUI_PASSWORD=`)
+- **Local:** `~/hermes-webui/.env` (linha `HERMES_WEBUI_PASSWORD=`)
 - **Como criar:** senha forte própria (ex: gerar com `openssl rand -base64 24`)
 - **Uso:** login no WebUI (obrigatória quando exposto além de localhost)
-- **⚠️ Importante:** guardar em gerenciador de senhas — sem ela, não há acesso ao WebUI
+- **⚠️ Importante:** fora do backup do Drive — **guardar em gerenciador de senhas**.
+  Sem ela, não há acesso ao WebUI após um desastre.
 
-## 4. API_SERVER_KEY (chave da API do Hermes)
-- **Local:** `~/hermes-data/hermes_mpt_ops/docker/.env` (linha `API_SERVER_KEY=`)
-- **Como criar:** é uma chave local de API — gerar com `openssl rand -hex 32`
-- **Uso:** autenticação entre WebUI e Agent (env var interpolada pelo compose)
-- **⚠️ Importante:** se trocar, atualizar também onde o WebUI referencia a API
-
-## 5. TELEGRAM_BOT_TOKEN (+ ALLOWED_USERS, HOME_CHANNEL)
+## 4. TELEGRAM_BOT_TOKEN (+ ALLOWED_USERS, HOME_CHANNEL)
 - **Local:** `~/.hermes/.env`
 - **Como obter:** falar com [@BotFather](https://t.me/BotFather) no Telegram → `/newbot` → copiar o token
 - **TELEGRAM_ALLOWED_USERS:** seu user ID (pedir ao @userinfobot ou usar o canal Home)
-- **TELEGRAM_HOME_CHANNEL:** ID do canal/chat de entrega (ex: `5019194495`)
+- **TELEGRAM_HOME_CHANNEL:** ID do canal/chat de entrega
 - **Uso:** conexão do Hermes com o Telegram (canal principal de comunicação)
 - **⚠️ Se perder:** criar bot novo no BotFather e atualizar o .env (o histórico do Telegram fica com o bot antigo)
 
-## 6. OPENROUTER_API_KEY
+## 5. OPENROUTER_API_KEY
 - **Local:** `~/.hermes/.env`
 - **Como obter:** https://openrouter.ai/keys → Create key
 - **Uso:** modelos gratuitos/alternativos via OpenRouter (tarefas leves)
 
-## 7. auth.json (credenciais Nous/OpenAI-compatível)
+## 6. auth.json (credenciais Nous/OpenAI-compatível)
 - **Local:** `~/.hermes/auth.json`
 - **Como obter:** rodar `hermes auth login` (fluxo OAuth) ou configurar via `hermes auth`
 - **Contém:** access_token, refresh_token, agent_key do provider `nous`
 - **⚠️ Importante:** tokens OAuth expiram — o login deve ser refeito periodicamente
 - **Backup:** incluído no tar.gz do Drive (restaurado na Fase 3)
 
-## 8. Google Workspace (google_client_secret.json + google_token.json)
+## 7. Google Workspace (google_client_secret.json + google_token.json)
 - **Local:** `~/.hermes/google_client_secret.json` e `~/.hermes/google_token.json`
 - **Como obter:**
   1. Google Cloud Console → criar projeto → habilitar APIs (Drive, Gmail, Calendar, Sheets, Docs)
@@ -208,19 +241,21 @@ sudo tailscale up --ssh
 - **Uso:** backup do Drive, email, calendário, sheets
 - **⚠️ Importante:** o token de refresh só pode ser gerado no primeiro fluxo OAuth — guarde o `client_secret.json`
 
-## 9. Email (Himalaya — senha de app Gmail)
+## 8. Email (Himalaya — senha de app Gmail)
 - **Local:** `~/.config/himalaya/config.toml` + script `get-password.sh`
 - **Como obter:**
   1. Google Account → Security → 2-Step Verification (obrigatório)
   2. App passwords → criar senha de app para "Mail"
   3. Configurar em `~/.config/himalaya/config.toml` (conta `gmail`)
-- **Uso:** envio de emails via CLI (Himalaya) — conta `eusouhal9000@gmail.com`
+- **Uso:** envio de emails via CLI (Himalaya)
 
-## 10. Tailscale (identidade da tailnet)
-- **Não é um arquivo** — é a conta Tailscale
-- **Como obter:** `sudo tailscale up` → login com a mesma conta Google
-- **Uso:** acesso remoto (WebUI HTTPS, SSH)
-- **⚠️ Se perder a tailnet:** recriar e reaplicar os grants (ver `wiki/referencias/tailscale-acesso-remoto.md`)
+## 9. Cloudflare Tunnel (token do túnel)
+- **Não é um arquivo versionável** — é o token gerado no dashboard
+- **Como obter:** Cloudflare → Zero Trust → Networks → Tunnels → seu tunnel → token
+  (ou recriar o tunnel apontando `webui-01.asideia.net → http://localhost:8787`)
+- **Local no host:** `/etc/cloudflared/token` (lido pelo serviço `cloudflared.service`)
+- **⚠️ Se perder:** recriar no dashboard e reinstalar o token; conferir o ingress
+  (hostname → serviço) e o Access
 
 ---
 
@@ -228,22 +263,17 @@ sudo tailscale up --ssh
 
 | Segredo | Local | Backup Drive? | Como renovar |
 |---------|-------|---------------|--------------|
-| GITHUB_TOKEN | `hermes-data/GITHUB_TOKEN.txt` | ✅ | GitHub → Developer settings |
-| .git-credentials | `hermes-data/.git-credentials` | ✅ | automático no push |
-| WEBUI_PASSWORD | `docker/.env` | ❌ (manual) | gerar nova + editar .env |
-| API_SERVER_KEY | `docker/.env` | ❌ (manual) | `openssl rand -hex 32` |
-| TELEGRAM_BOT_TOKEN | `~/.hermes/.env` | ✅ | BotFather → /newbot |
+| GITHUB_TOKEN | `/home/hermes/GITHUB_TOKEN.txt` | ✅ | GitHub → Developer settings |
+| .git-credentials | `/home/hermes/.git-credentials` | ✅ | automático no push |
+| WEBUI_PASSWORD | `~/hermes-webui/.env` | ❌ (manual) | gerar nova + editar .env + `ctl.sh restart` |
+| TELEGRAM_* | `~/.hermes/.env` | ✅ | BotFather → /newbot |
 | OPENROUTER_KEY | `~/.hermes/.env` | ✅ | openrouter.ai/keys |
 | auth.json (Nous) | `~/.hermes/auth.json` | ✅ | `hermes auth login` |
 | Google OAuth | `~/.hermes/google_*` | ✅ | Google Cloud Console |
-| Himalaya (Gmail) | `~/.config/himalaya/` | ✅ (no .hermes? verificar) | Google App passwords |
-| Tailscale | conta online | — | `tailscale up` |
+| Himalaya (Gmail) | `~/.config/himalaya/` | ✅ (no tgz) | Google App passwords |
+| Cloudflare Tunnel | dashboard + `/etc/cloudflared/token` | ❌ (manual) | dashboard → token |
 
-> **Nota:** as variáveis `HOST_HERMES_HOME`, `HOST_HERMES_DATA` e
-> `HOST_HERMES_WEBUI_WORKSPACE` (caminhos de volume) **não são segredos** —
-> usam `${HOME}` e não precisam de edição manual.
-
-> **Nota importante:** os segredos marcados como "❌ (manual)" (WEBUI_PASSWORD e
-> API_SERVER_KEY) **não estão no backup** porque vivem no `.env` do docker, que é
-> local por design. **Guarde-os em um gerenciador de senhas** (ex: Bitwarden,
-> Keepass) — são os únicos 2 que você precisa ter na cabeça/lixeira em caso de desastre.
+> **Nota:** no modelo VM nativo **não existe mais** `API_SERVER_KEY` nem `.env` de
+> Docker — o WebUI fala com o gateway via localhost (porta interna do processo).
+> A raiz do `hermes-data` foi **esvaziada de segredos** — qualquer token novo deve
+> ir para `/home/hermes/`, nunca para dentro do `hermes-data`.

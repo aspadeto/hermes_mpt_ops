@@ -1,6 +1,6 @@
 # DR MPT — Repositório de Operações (hermes_mpt_ops)
 
-Repositório de **engenharia e operações** da Diretoria Regional do MPT (Rondônia/Acre).
+Repositório de **engenharia e operações** da Diretoria Regional do MPT.
 Complementar ao [hermes_mpt_kb](https://github.com/aspadeto/hermes_mpt_kb) (conhecimento).
 
 > 🤖 **Agentes (Hermes, Claude Code, Copilot):** leia o
@@ -19,34 +19,34 @@ Complementar ao [hermes_mpt_kb](https://github.com/aspadeto/hermes_mpt_kb) (conh
 
 ## 1. Visão Geral da Infraestrutura
 
-O ambiente roda o **Hermes Agent** com a **Hermes WebUI** em dois containers conectados
-(via Docker Compose), acessíveis remotamente via **Tailscale**.
+> **⚠️ MUDANÇA ESTRUTURAL (07/08/2026):** o ambiente saiu de **Docker Compose
+> (2 containers) para VM nativa** (`hermes-01`, Ubuntu 24.04). Não há mais
+> containers, `docker-compose`, rede docker nem Tailscale. Docker e Tailscale
+> foram **removidos**; a pasta `docker/` deste repo é só **histórico sanitizado**.
 
-| Componente | Endereço | Porta |
-|-----------|----------|-------|
-| Hermes Agent (gateway) | `localhost` (host) | 8642 |
-| Hermes WebUI | `https://as7-hermes-docker.tail15f7e7.ts.net` | 8787 |
-| Dashboard | `localhost` (host) | 9119 |
+O **Hermes Agent** roda como **user service do systemd** (`hermes-gateway.service`),
+e a **Hermes WebUI** roda como processo daemon da própria WebUI (`ctl.sh start`),
+exposta via **Cloudflare Tunnel**.
 
-> Detalhes completos do Tailscale (grants, serve, SSH): `wiki/referencias/tailscale-acesso-remoto.md`
+| Componente | Como roda | Endereço |
+|-----------|-----------|----------|
+| Hermes Agent (gateway: Telegram + API) | `systemctl --user` → `hermes-gateway.service` (venv `~/.hermes/hermes-agent`) | API local `127.0.0.1:20241` |
+| Hermes WebUI | daemon `~/hermes-webui/ctl.sh start` → `server.py` | `127.0.0.1:8787` (login) |
+| Acesso remoto (WebUI) | Cloudflare Tunnel (serviço `cloudflared.service`, token no dashboard) | `https://webui-01.asideia.net` |
+| SSH | `sshd` padrão | porta 22 |
 
-### Compose e Volumes
-
-O compose vive em **`docker/`** e é parametrizado via `.env` (veja abaixo):
-
-| Variável (`.env`) | Host (default) | Container | Conteúdo |
-|-------------------|---------------|-----------|----------|
-| `HOST_HERMES_HOME` | `${HOME}/.hermes` | `/home/hermes/.hermes` (agent) / `/home/hermeswebui/.hermes` (webui) | Config, sessões, skills, memória, cache |
-| `HOST_HERMES_DATA` | `${HOME}/hermes-data` | `/opt/data/hermes-data` | **Este repositório** + wiki + tokens |
-| `HOST_HERMES_WEBUI_WORKSPACE` | `${HOME}/hermes-data/hermes-webui/workspace` | `/workspace` | Área de trabalho (WebUI) |
-| `hermes-agent-src` (volume Docker) | — | `/opt/hermes` | Código-fonte do Hermes Agent (volume nomeado) |
-
-> 💡 Os valores usam `${HOME}` — o Compose expande com o home real do usuário do
-> host, tornando o `.env` portátil entre máquinas. Só use caminho absoluto se o
-> layout do host for atípico.
-
-> **Nota:** O container usa UID/GID `1000` por padrão. Se seu usuário host tem UID
-> diferente, ajuste no `.env`: `echo "UID=$(id -u)" >> .env` e `GID=$(id -g)`.
+**Fatos verificados (07/08/2026, pós-migração):**
+- O gateway e a WebUI rodam como **processos nativos** do usuário `hermes` (sem container).
+  O processo da WebUI ficou no cgroup do user service (`/proc/<pid>/cgroup` →
+  `app.slice/hermes-gateway.service`) — a gestão do serviço é via `systemctl --user`.
+- `/opt/data/hermes-data` é **diretório real** na VM (não é bind mount de container).
+- Segredos migraram para **fora** do `hermes-data`: `/home/hermes/GITHUB_TOKEN.txt`,
+  `/home/hermes/.git-credentials`, `~/.hermes/.env`, `~/hermes-webui/.env`.
+- **Docker inacessível por design** — não há daemon nem socket no host.
+- **Tailscale removido** (bloqueio de rede); acesso remoto via Cloudflare Tunnel.
+- ⚠️ `browser.cdp_url: ws://browser:3000/` no `config.yaml` ainda aponta para o
+  container `hermes-browser` (browserless) que **não existe mais** — ferramentas de
+  browser precisam de reconfiguração (pendência aberta).
 
 ---
 
@@ -56,11 +56,15 @@ O compose vive em **`docker/`** e é parametrizado via `.env` (veja abaixo):
 hermes_mpt_ops/
 ├── scripts/     ← todos os scripts (dados + automação)
 ├── data/        ← bancos SQLite versionados (pendencias.db, regional-orcamento.db)
-├── docker/      ← docker-compose.yml + .env-default (template SEM segredos)
+├── docker/      ← ⚠️ HISTÓRICO — compose sanitizado do modelo container (removido 07/08/2026). NÃO USAR
 ├── configs/     ← reservado p/ templates de config (.env.example, compose.example)
-├── docs/        ← runbooks e notas de infra (recuperação, SSH host)
+├── docs/        ← runbooks e notas de infra (recuperação, manutenção da VM)
 └── bin/         ← (removido — scripts consolidados em scripts/)
 ```
+
+> Scripts `host-restart.sh`, `host-reboot.sh`, `host-status.sh` (SSH container→host)
+> e `update_hermes-agente-src.sh` (volume docker) estão **obsoletos** — aguardando
+> remoção. `bootstrap.sh` ainda segue o fluxo docker (desatualizado).
 
 ---
 
@@ -75,8 +79,6 @@ hermes_mpt_ops/
 | `importar-execucao.py` | Importa execução orçamentária | — |
 | `hermes-backup.py` | Backup do Hermes para Google Drive | google-api (venv) |
 | `kb-auto-commit.sh` | Auto-commit do KB + OPS (cron 10min) | git |
-| `bootstrap.sh` | Reativação do ambiente em host novo (recuperação) | docker, git |
-| `update_hermes-agente-src.sh` | Recria o volume `hermes-agent-src` no Docker | docker |
 
 ### Wrappers de cron
 
@@ -92,7 +94,7 @@ hermes_mpt_ops/scripts/          ← CÓDIGO REAL (versionado)
 
 ---
 
-## 4. Instalação
+## 4. Instalação (VM nativa)
 
 ```bash
 # No host, clonar
@@ -102,33 +104,48 @@ git clone https://github.com/aspadeto/hermes_mpt_ops.git
 uv venv .venv
 uv pip install pymupdf
 
-# Docker: configurar o .env a partir do template
-cd docker
-cp .env-default .env
-# preencher: HERMES_WEBUI_PASSWORD e API_SERVER_KEY (ver runbook)
+# Segredos e config (ver docs/RUNBOOK-RECUPERACAO.md):
+#   /home/hermes/GITHUB_TOKEN.txt + /home/hermes/.git-credentials  (git)
+#   ~/.hermes/.env          (Telegram, OpenRouter — lido pelo gateway)
+#   ~/hermes-webui/.env     (HERMES_WEBUI_HOST/PORT/PASSWORD)
+```
+
+Subir o ambiente:
+
+```bash
+# Gateway (user service — sobe no login do usuário)
+systemctl --user enable --now hermes-gateway.service
+
+# WebUI (daemon próprio)
+cd ~/hermes-webui && ./ctl.sh start
+
+# Túnel Cloudflare (serviço de sistema; token SÓ no dashboard)
+sudo systemctl enable --now cloudflared
 ```
 
 ---
 
 ## 5. Atualização da Infraestrutura
 
-### Atualizar a imagem do agente
+### Atualizar o agente (hermes-agent)
+
+O código vive no venv `~/.hermes/hermes-agent` (instalado via `uv`/`pip`).
+Atualizar e reiniciar o serviço:
 
 ```bash
-docker compose pull
-docker compose down
-docker compose up -d
+systemctl --user restart hermes-gateway.service   # gateway (Telegram/API)
+cd ~/hermes-webui && ./ctl.sh restart             # WebUI
 ```
 
-### Atualizar o código-fonte do agente (volume `hermes-agent-src`)
-
-O volume nomeado `hermes-agent-src` NÃO é atualizado pelo `docker compose pull`.
-Use o script dedicado:
+### Ver status
 
 ```bash
-scripts/update_hermes-agente-src.sh
-# (faz: down → rm volume → pull → up)
+systemctl --user status hermes-gateway.service
+~/hermes-webui/ctl.sh status
+systemctl status cloudflared
 ```
+
+> Operações do dia a dia: [docs/RUNBOOK-MANUTENCAO-VM.md](docs/RUNBOOK-MANUTENCAO-VM.md)
 
 ---
 
@@ -140,6 +157,9 @@ scripts/update_hermes-agente-src.sh
 | Backup Google Drive | diário 03:00 UTC | tar.gz de `~/.hermes` + `hermes-data` (exclui repos git) |
 | Lembrete de pendências | 3x/dia (9h, 14h, 18h UTC) | Avisa quando há pendências a resolver |
 
+> Cron ativo no scheduler do Hermes (jobs `enabled: true` — conferir com
+> `hermes cron list`). Lembretes via `pendencia-remind.py`.
+
 ---
 
 ## 7. Segredos
@@ -148,11 +168,18 @@ scripts/update_hermes-agente-src.sh
 `GITHUB_TOKEN.txt`, `.git-credentials`, `client_secret*.json`, `google_token.json`,
 `.env` e `.env.*` (com exceção do template `docker/.env-default`, sanitizado).
 
-Segredos vivem **fora** dos repositórios:
-- `hermes-data/GITHUB_TOKEN.txt` — token do GitHub (clones/push)
-- `hermes-data/.git-credentials` — credenciais git (store)
-- `docker/.env` — segredos do Docker (senha WebUI, API key, caminhos)
-- `~/.hermes/.env` — segredos do Hermes (Telegram, OpenRouter)
+Segredos vivem **fora** dos repositórios (raiz do hermes-data foi **esvaziada** de
+segredos na migração):
+
+| Segredo | Local |
+|---------|-------|
+| GitHub (token + credentials) | `/home/hermes/GITHUB_TOKEN.txt`, `/home/hermes/.git-credentials` |
+| Telegram + OpenRouter | `~/.hermes/.env` |
+| Senha do WebUI | `~/hermes-webui/.env` (⚠️ fora do backup do Drive — guardar no gerenciador) |
+| Nous / providers | `~/.hermes/auth.json` |
+| Google Workspace | `~/.hermes/google_client_secret.json`, `~/.hermes/google_token.json` |
+| Email (Himalaya/Gmail) | `~/.config/himalaya/` |
+| Cloudflare Tunnel | token no **dashboard** + `/etc/cloudflared/token` (⚠️ fora do backup) |
 
 Para versionar configuração, usar **templates** (ex: `docker/.env-default`) sem valores.
 
@@ -160,34 +187,35 @@ Para versionar configuração, usar **templates** (ex: `docker/.env-default`) se
 
 ## 8. Recuperação de Desastre
 
-O ambiente é **replicável**: se o host falhar, o sistema pode ser reativado
-em uma máquina nova com:
-
-```bash
-bash <(curl -s https://raw.githubusercontent.com/aspadeto/hermes_mpt_ops/main/scripts/bootstrap.sh) \
-  --restore-backup /caminho/hermes-backup-*.tar.gz
-```
+O ambiente é **replicável**: se o host falhar, o sistema pode ser reativado em uma
+máquina nova com `git` + backup do Google Drive (não há mais dependência de Docker).
 
 **Documentação completa:**
 - 📋 **[docs/RUNBOOK-RECUPERACAO.md](docs/RUNBOOK-RECUPERACAO.md)** — passo a passo
-  detalhado (7 fases) + **como criar/obter cada segredo** (10 segredos documentados)
-- ⚙️ **`scripts/bootstrap.sh`** — automação das fases 2-6 (clone, restore, .env, up)
+  detalhado (7 fases) + **como criar/obter cada segredo**
 
 **Cobertura da recuperação:**
 
 | Camada | Fonte |
 |--------|-------|
-| Engenharia (scripts, docker, bancos) | `hermes_mpt_ops` (git) |
+| Engenharia (scripts, bancos) | `hermes_mpt_ops` (git) |
 | Conhecimento (wiki) | `hermes_mpt_kb` (git) |
 | Identidade (config, memória, tokens) | **Backup Google Drive** (diário) |
 
-> ⚠️ **2 segredos não estão em nenhum backup** (vivem no `.env` local):
-> `HERMES_WEBUI_PASSWORD` e `API_SERVER_KEY`. **Guardar em gerenciador de senhas.**
+> ⚠️ **Segredos fora de qualquer backup** (restaurar manualmente): `WEBUI_PASSWORD`
+> (`~/hermes-webui/.env`) e o **token do Cloudflare Tunnel** (dashboard). Guardar em
+> gerenciador de senhas.
 
 ---
 
 ## 9. Limitações Conhecidas
 
-- Ferramentas acionadas da WebUI rodam no container da WebUI, **não** no agente (issue #681 do hermes-webui)
-- O Gateway API fica exposto apenas em `localhost` por padrão
-- WebUI precisa de `HERMES_NIX_BUILD=1` (bug #6441 do hermes-webui — fix em andamento)
+- Ferramentas de **browser** do Hermes: `cdp_url` aponta para o container
+  `hermes-browser` (browserless) que não existe mais pós-migração — reconfigurar
+  (pendência aberta).
+- `~/hermes-webui/.env` (senha do WebUI) **não entra no backup** do Drive (fora de
+  `~/.hermes` e `hermes-data`).
+- Token do Cloudflare Tunnel vive só no dashboard + `/etc/cloudflared/token` — não
+  migra em backup.
+- Firewall da rede pode bloquear o domínio novo (`webui-01.asideia.net`) por ~30
+  dias após criação.

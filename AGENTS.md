@@ -36,7 +36,7 @@ Antes de implementar:
 - Se algo não está claro, **pare e nomeie o que confunde**
 
 **Especial para este ambiente:**
-- NÃO alterar arquivos originais/em uso (docker-compose, .env, configs do host)
+- NÃO alterar arquivos originais/em uso (units systemd, .env, configs do host)
   sem permissão explícita — analisar primeiro, pedir autorização, ter plano de restauração
 - Antes de mudanças estruturais, discutir o desenho com o usuário
 
@@ -105,8 +105,8 @@ Critérios de sucesso fortes permitem iterar de forma independente. Critérios f
 
 ## 6. Segurança por Padrão
 
-- Segredos vivem fora dos repos: `hermes-data/GITHUB_TOKEN.txt`, `.git-credentials`,
-  `docker/.env`, `~/.hermes/.env`
+- Segredos vivem fora dos repos: `/home/hermes/GITHUB_TOKEN.txt`,
+  `/home/hermes/.git-credentials`, `~/.hermes/.env`, `~/hermes-webui/.env`
 - Para versionar configuração, usar **templates** (`.env-default`, `.example`) sem valores
 - Wrappers do cron vivem em `~/.hermes/scripts/` (não versionados) e chamam o código
   real do OPS

@@ -1,4 +1,16 @@
-# RUNBOOK — Acesso SSH do Container Hermes ao Host
+# RUNBOOK — SSH do Container → Host (OBSOLETO)
+
+> ## ⚠️ OBSOLETO (07/08/2026) — Docker removido
+>
+> Este runbook descreve o acesso **SSH do container `hermes-agent` para o host**
+> (administração de docker/host pelo agente). Com a migração para **VM nativa**
+> (07/08/2026), não existem mais containers nem rede docker — o agente roda **na
+> própria VM** e administra direto (`systemctl --user`, `ctl.sh`, `cloudflared`).
+>
+> **Substituído por:** [RUNBOOK-MANUTENCAO-VM.md](RUNBOOK-MANUTENCAO-VM.md)
+>
+> O conteúdo abaixo fica apenas como registro histórico (como o acesso funcionava
+> no modelo anterior). NÃO usar em operações atuais.
 
 **Objetivo:** permitir que o container `hermes-agent` execute comandos no host
 via SSH (docker restart, reboot do host, status), sem senha e de forma segura.
