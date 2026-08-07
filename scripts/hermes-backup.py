@@ -44,6 +44,16 @@ EXCLUDE_PATTERNS = [
 # backups/ é alvo da rotação, .google-venv é ambiente
 DATA_EXCLUDE = {".google-venv", "hermes_mpt_kb", "hermes_mpt_ops", "backups"}
 
+# Segredos/config do HOST fora dos 2 diretórios padrão (VM nativa — ago/2026).
+# Cada tupla: (caminho_origem_no_host, arcname_dentro_do_tar.gz).
+# Incluídos em "host-secrets/" para restauração completa em DR.
+EXTRA_SECRETS = [
+    ("/home/hermes/hermes-webui/.env", "host-secrets/webui.env"),
+    ("/home/hermes/.config/himalaya", "host-secrets/himalaya"),
+    ("/home/hermes/.git-credentials", "host-secrets/git-credentials"),
+    ("/home/hermes/GITHUB_TOKEN.txt", "host-secrets/GITHUB_TOKEN.txt"),
+]
+
 # ── helpers ──────────────────────────────────────────────
 
 def run_gapi(*args: str) -> dict:
@@ -117,6 +127,12 @@ def create_tar_gz() -> str:
     with tarfile.open(path, "w:gz", compresslevel=6) as tar:
         tar.add(HERMES_HOME, arcname=".hermes", filter=filter_hermes)
         tar.add(DATA_DIR, arcname="data", filter=filter_data)
+        # Segredos/config do host fora dos 2 diretórios padrão (VM nativa)
+        for origem, arcname in EXTRA_SECRETS:
+            if os.path.exists(origem):
+                tar.add(origem, arcname=arcname)
+            else:
+                print(f"  ⚠️  EXTRA_SECRETS: {origem} não existe — pulando")
 
     size_mb = os.path.getsize(path) / 1024 / 1024
     print(f"  💾 Size: {size_mb:.1f} MB")
