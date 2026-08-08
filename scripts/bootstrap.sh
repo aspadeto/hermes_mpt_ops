@@ -230,24 +230,103 @@ else
   # Habilitar lingering para user services subirem no boot
   loginctl enable-linger "$USER" 2>/dev/null || warn "loginctl enable-linger falhou (precisa sudo?)"
 
+  # Diretório de units
+  SYSTEMD_DIR="$HOME/.config/systemd/user"
+  mkdir -p "$SYSTEMD_DIR"
+
+  # ── hermes-gateway.service ──
+  GATEWAY_SERVICE="$SYSTEMD_DIR/hermes-gateway.service"
+  if [[ ! -f "$GATEWAY_SERVICE" ]]; then
+    log "Criando $GATEWAY_SERVICE"
+    cat > "$GATEWAY_SERVICE" <<'EOF'
+[Unit]
+Description=Hermes Agent Gateway - Messaging Platform Integration
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=%h/.hermes/hermes-agent/venv/bin/python -m hermes_cli.main gateway run
+WorkingDirectory=%h/.hermes
+Environment="PATH=%h/.hermes/hermes-agent/venv/bin:%h/.hermes/hermes-agent/node_modules/.bin:%h/.hermes/node/bin:%h/.hermes/node:%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="VIRTUAL_ENV=%h/.hermes/hermes-agent/venv"
+Environment="HERMES_HOME=%h/.hermes"
+Restart=always
+RestartSec=5
+RestartForceExitStatus=75
+RestartPreventExitStatus=78
+KillMode=mixed
+KillSignal=SIGTERM
+ExecReload=/bin/kill -USR1 $MAINPID
+ExecStopPost=-%h/.hermes/hermes-agent/venv/bin/python -m gateway.cgroup_cleanup
+TimeoutStopSec=60
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
+EOF
+    ok "hermes-gateway.service criado"
+  else
+    ok "hermes-gateway.service já existe"
+  fi
+
+  # ── hermes-webui.service ──
+  WEBUI_SERVICE="$SYSTEMD_DIR/hermes-webui.service"
+  if [[ ! -f "$WEBUI_SERVICE" ]]; then
+    log "Criando $WEBUI_SERVICE"
+    cat > "$WEBUI_SERVICE" <<'EOF'
+[Unit]
+Description=Hermes WebUI (Dashboard)
+After=network-online.target hermes-gateway.service
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Environment=HERMES_HOME=%h/.hermes
+EnvironmentFile=-%h/hermes-webui/.env
+ExecStart=%h/hermes-webui/ctl.sh start
+ExecStop=%h/hermes-webui/ctl.sh stop
+ExecReload=%h/hermes-webui/ctl.sh restart
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=60
+TimeoutStopSec=15
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.hermes %h/hermes-webui
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictRealtime=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=default.target
+EOF
+    ok "hermes-webui.service criado"
+  else
+    ok "hermes-webui.service já existe"
+  fi
+
   # Recarregar daemon
   systemctl --user daemon-reload
 
-  # hermes-gateway (já deve existir em ~/.config/systemd/user/)
-  if [[ -f "$HOME/.config/systemd/user/hermes-gateway.service" ]]; then
-    systemctl --user enable hermes-gateway 2>/dev/null && ok "hermes-gateway enabled"
-    systemctl --user restart hermes-gateway 2>/dev/null && ok "hermes-gateway reiniciado"
-  else
-    warn "hermes-gateway.service não encontrado em ~/.config/systemd/user/"
-  fi
+  # Habilitar e iniciar
+  systemctl --user enable hermes-gateway 2>/dev/null && ok "hermes-gateway enabled"
+  systemctl --user enable hermes-webui 2>/dev/null && ok "hermes-webui enabled"
 
-  # hermes-webui (criado hoje)
-  if [[ -f "$HOME/.config/systemd/user/hermes-webui.service" ]]; then
-    systemctl --user enable hermes-webui 2>/dev/null && ok "hermes-webui enabled"
-    systemctl --user restart hermes-webui 2>/dev/null && ok "hermes-webui reiniciado"
-  else
-    warn "hermes-webui.service não encontrado"
-  fi
+  systemctl --user restart hermes-gateway 2>/dev/null && ok "hermes-gateway reiniciado"
+  systemctl --user restart hermes-webui 2>/dev/null && ok "hermes-webui reiniciado"
 
   # Verificar status
   sleep 2
