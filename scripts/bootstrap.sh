@@ -287,26 +287,25 @@ StartLimitIntervalSec=0
 Type=simple
 Environment=HERMES_HOME=%h/.hermes
 EnvironmentFile=-%h/hermes-webui/.env
-ExecStart=%h/hermes-webui/ctl.sh start
-ExecStop=%h/hermes-webui/ctl.sh stop
-ExecReload=%h/hermes-webui/ctl.sh restart
+ExecStart=%h/.hermes/hermes-agent/venv/bin/python %h/hermes-webui/bootstrap.py --no-browser --foreground --host 127.0.0.1 8787
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=60
 TimeoutStopSec=15
 
-# Security hardening
+# Security hardening (compatível com user services)
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
 ReadWritePaths=%h/.hermes %h/hermes-webui
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectControlGroups=true
-RestrictNamespaces=true
-LockPersonality=true
-MemoryDenyWriteExecute=true
+# Estas opções requerem CAP_DROP que user services não têm:
+# ProtectKernelTunables=true
+# ProtectKernelModules=true
+# ProtectControlGroups=true
+# RestrictNamespaces=true
+# LockPersonality=true
+# MemoryDenyWriteExecute=true
 RestrictRealtime=true
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 
