@@ -20,6 +20,7 @@ Uso:
 """
 
 import argparse
+import json
 import re
 import sqlite3
 import sys
@@ -327,11 +328,52 @@ def criar_schema(db: sqlite3.Connection):
     db.commit()
 
 
+def aplicar_curadoria(db: sqlite3.Connection, arquivo: Path) -> int:
+    """Reaplica a curadoria persistente (relevante + ementa limpa + observacao).
+
+    O arquivo JSON é versionado e chaveado por (data, tipo, numero, pagina) —
+    não por ID — para sobreviver à recriação do banco (--recriar).
+
+    Formato do JSON (lista de registros):
+        [
+          {
+            "data": "2024-11-06", "tipo": "RESOLUÇÃO", "numero": "222",
+            "pagina": 24,                     // opcional; omite p/ aplicar em todas as páginas do ato
+            "relevante": 1,
+            "ementa": "...",                  // opcional
+            "observacao": "..."               // opcional
+          }, ...
+        ]
+    """
+    if not arquivo.exists():
+        return 0
+    registros = json.loads(arquivo.read_text(encoding="utf-8"))
+    n = 0
+    for rec in registros:
+        # acha o(s) ato(s) pelo boletim correspondente à data
+        bid = db.execute("SELECT id FROM boletins WHERE data=?", (rec["data"],)).fetchone()
+        if not bid:
+            continue
+        sql = ("UPDATE atos_normativos SET relevante=?, ementa=COALESCE(?, ementa), "
+               "observacao=? WHERE boletim_id=? AND tipo=? AND numero=?")
+        params = [rec.get("relevante", 1), rec.get("ementa"), rec.get("observacao"),
+                  bid[0], rec["tipo"], rec["numero"]]
+        if "pagina" in rec:
+            sql += " AND pagina=?"
+            params.append(rec["pagina"])
+        cur = db.execute(sql, params)
+        n += cur.rowcount
+    db.commit()
+    return n
+
+
 def main():
     ap = argparse.ArgumentParser(description="Catálogo de atos de Boletins de Serviço do MPT")
     ap.add_argument("--raiz", default="boletins", help="dir com pastas YYYY-MM-DD")
     ap.add_argument("--db", default="atos.db", help="caminho do banco sqlite")
     ap.add_argument("--recriar", action="store_true", help="dropa e recria as tabelas")
+    ap.add_argument("--curadoria", default="data/curadoria_atos.json",
+                    help="arquivo JSON de curadoria persistente")
     args = ap.parse_args()
 
     raiz = Path(args.raiz)
@@ -365,7 +407,9 @@ def main():
         print(f"  {pasta.name}: {len(mds)} MD, {n} atos")
 
     db.commit()
-    print(f"\n✅ Total: {len(pastas)} datas, {total_atos} atos catalogados em {args.db}")
+    n_cura = aplicar_curadoria(db, Path(args.curadoria))
+    print(f"\n✅ Total: {len(pastas)} datas, {total_atos} atos catalogados em {args.db}"
+          + (f" · curadoria aplicada a {n_cura} atos" if n_cura else ""))
 
 
 if __name__ == "__main__":
