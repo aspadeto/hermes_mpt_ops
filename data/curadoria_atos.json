@@ -61,5 +61,59 @@
     "relevante": 1,
     "ementa": "Portaria PRT9 nº 309/2024 — Dispõe sobre o Cadastro de pessoas jurídicas de direito privado sem fins lucrativos, instituições, entidades e órgãos públicos, para reversão de bens e recursos oriundos da atuação institucional do MPT no Estado do Paraná.",
     "observacao": "Regula procedimento de cadastramento para reversão de bens/recursos (Resolução CSMPT 179/2020)."
+  },
+  {
+    "data": "2024-12-17",
+    "tipo": "PORTARIA",
+    "numero": "372",
+    "pagina": 36,
+    "relevante": 1,
+    "ementa": "Portaria PRT15 nº 372/2024 — Aprova o Regimento Interno do Núcleo Permanente de Incentivo à Autocomposição da PRT15 (NUPIA/15ª), regulando sua organização e funcionamento.",
+    "observacao": "Regimento interno de núcleo de autocomposição (PGEA 20.02.1500.0002079/2024-46)."
+  },
+  {
+    "data": "2024-12-18",
+    "tipo": "OFÍCIO",
+    "numero": "438",
+    "pagina": 12,
+    "relevante": 1,
+    "ementa": "Portaria PRT4 nº 438/2024 — Aprova o Regimento Interno da Coordenadoria de Atuação em Segundo Grau de Jurisdição da PRT4, regulando sua organização e funcionamento.",
+    "observacao": "Regimento interno de coordenadoria de atuação em 2º grau."
+  },
+  {
+    "data": "2024-12-20",
+    "tipo": "PORTARIA",
+    "numero": "331",
+    "pagina": 42,
+    "relevante": 1,
+    "ementa": "Portaria — Institui Comissão para estudar a operacionalização da Resolução Conjunta (PGEA 20.02.0800.0000740/2024-42).",
+    "observacao": "Institui comissão de estudo de operacionalização normativa."
+  },
+  {
+    "data": "2025-02-10",
+    "tipo": "PORTARIA",
+    "numero": "22",
+    "pagina": 20,
+    "relevante": 1,
+    "ementa": "Portaria PRT24 nº 22/2025 — Regulamenta as atribuições dos Ofícios de Primeiro e de Segundo Graus no âmbito da PRT24/MS.",
+    "observacao": "Regulamenta atribuições de ofícios (1º e 2º grau)."
+  },
+  {
+    "data": "2025-04-24",
+    "tipo": "PORTARIA",
+    "numero": "35",
+    "pagina": 13,
+    "relevante": 1,
+    "ementa": "Portaria PRT23 nº 35/2025 — Regulamenta os critérios de autuação, distribuição e redistribuição de procedimentos e processos da PRT23, rotinas de gabinete/secretaria, atribuição perante o TRT23 e listas de substituição/designação específica.",
+    "observacao": "Regulamentação abrangente do funcionamento de processos na regional."
+  },
+  {
+    "data": "2025-05-13",
+    "tipo": "RESOLUÇÃO",
+    "numero": "292",
+    "pagina": 5,
+    "relevante": 1,
+    "ementa": "Nota Técnica CONAETE — Regulamenta a Rede Interna de Inteligência do MPT: credenciamento, classificação de informações, requerimentos de informação/conhecimento e tramitação de PGEA junto à Secretaria de Segurança Institucional (SIC), no âmbito do MPT Digital Administrativo (MPTDA).",
+    "observacao": "Regulamenta tramitação de PGEA e procedimentos de inteligência."
   }
 ]
