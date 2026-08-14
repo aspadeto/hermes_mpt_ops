@@ -33,3 +33,5 @@ Thumbs.db
 !data/pendencias.db
 # OBS: processos.db É versionado (compreensão causal de PGEAs — ago/2026)
 !data/processos.db
+# OBS: atos.db É versionado (catálogo de atos normativos de Boletins de Serviço — ago/2026)
+!data/atos.db
