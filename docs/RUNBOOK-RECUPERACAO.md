@@ -1,6 +1,6 @@
 # RUNBOOK — Recuperação de Desastre do Ambiente Hermes
 
-**Objetivo:** reativar o ambiente completo (Hermes Agent + WebUI + Telegram + backups)
+**Objetivo:** reativar o ambiente completo (Hermes Agent + Gateway + WebUI + Dashboard + Telegram + backups)
 em um host novo, quando a VM atual falhar.
 
 **Princípio:** `git` + `backup do Google Drive` cobrem 100% do ambiente.
@@ -113,9 +113,10 @@ Não há mais `.env` de Docker. Os segredos vivem em arquivos locais:
 
 | Arquivo | Conteúdo |
 |---------|----------|
-| `~/.hermes/.env` | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`, `OPENROUTER_API_KEY` |
+| `~/.hermes/.env` | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, `TELEGRAM_HOME_CHANNEL`, `OPENROUTER_API_KEY`, `HERMES_DASHBOARD_SESSION_TOKEN` |
 | `~/hermes-webui/.env` | `HERMES_WEBUI_HOST=127.0.0.1`, `HERMES_WEBUI_PORT=8787`, `HERMES_WEBUI_PASSWORD=<senha>` |
 | `~/.hermes/auth.json` | credenciais Nous (restauradas no backup) |
+| `~/.hermes/config.yaml` | `dashboard.basic_auth` (username, password_hash, secret) — ver seção de segredos |
 
 ```bash
 # Exemplo do ~/.hermes/.env
@@ -139,7 +140,10 @@ systemctl --user enable --now hermes-gateway.service
 # 5.2 WebUI (daemon próprio do hermes-webui)
 cd ~/hermes-webui && ./ctl.sh start
 
-# 5.3 Túnel Cloudflare (serviço de sistema, root)
+# 5.3 Dashboard (user service — novo Web UI SPA, porta 9119)
+systemctl --user enable --now hermes-dashboard.service
+
+# 5.4 Túnel Cloudflare (serviço de sistema, root)
 #     Token obtido no dashboard (Cloudflare → Zero Trust → Tunnels → seu tunnel)
 sudo mkdir -p /etc/cloudflared
 sudo tee /etc/cloudflared/token > /dev/null << 'EOF'
@@ -150,7 +154,9 @@ sudo systemctl enable --now cloudflared
 # Verificar
 systemctl --user status hermes-gateway.service
 ~/hermes-webui/ctl.sh status
+systemctl --user status hermes-dashboard.service
 curl -s http://127.0.0.1:8787 -o /dev/null -w "%{http_code}"   # espera 302 (login)
+curl -s http://127.0.0.1:9119 -o /dev/null -w "%{http_code}"   # espera 200
 ```
 
 ---
@@ -158,10 +164,12 @@ curl -s http://127.0.0.1:8787 -o /dev/null -w "%{http_code}"   # espera 302 (log
 ## FASE 6 — Restaurar conectividade
 
 ```bash
-# 6.1 O túnel do dashboard já mapeia o hostname → serviço local:
-#     https://webui-01.asideia.net  →  http://localhost:8787
+# 6.1 O túnel já mapeia os hostnames → serviços locais:
+#     https://webui-01.asideia.net        →  http://localhost:8787
+#     https://dashboard-01.asideia.net    →  http://localhost:9119
 #     (conferir o ingress no dashboard; Cloudflare Access na frente)
 curl -s https://webui-01.asideia.net -o /dev/null -w "%{http_code}"
+curl -s https://dashboard-01.asideia.net -o /dev/null -w "%{http_code}"
 
 # 6.2 SSH
 #     porta 22 padrão; usuário hermes. (Tailscale SSH não existe mais.)
@@ -174,7 +182,9 @@ curl -s https://webui-01.asideia.net -o /dev/null -w "%{http_code}"
 | Check | Comando | Esperado |
 |-------|---------|----------|
 | WebUI | `curl -s http://127.0.0.1:8787` | 302/200 |
+| Dashboard | `curl -s http://127.0.0.1:9119` | 200 |
 | WebUI remoto | `curl -s https://webui-01.asideia.net` | login (Access) |
+| Dashboard remoto | `curl -s https://dashboard-01.asideia.net` | login (Access) |
 | Telegram | enviar mensagem ao bot | responde |
 | API | `curl -s http://127.0.0.1:20241/` | responde (404 genérico = vivo) |
 | Backup | rodar `hermes_mpt_ops/scripts/hermes-backup.py` | upload OK |
@@ -211,7 +221,20 @@ curl -s https://webui-01.asideia.net -o /dev/null -w "%{http_code}"
 - **⚠️ Importante:** fora do backup do Drive — **guardar em gerenciador de senhas**.
   Sem ela, não há acesso ao WebUI após um desastre.
 
-## 4. TELEGRAM_BOT_TOKEN (+ ALLOWED_USERS, HOME_CHANNEL)
+## 4. HERMES_DASHBOARD_SESSION_TOKEN (token de sessão do dashboard)
+- **Local:** `~/.hermes/.env` (linha `HERMES_DASHBOARD_SESSION_TOKEN=`)
+- **Como criar:** `python3 -c "import secrets; print(secrets.token_urlsafe(48))"` — token único, forte
+- **Uso:** autentica chamadas de API sensíveis (`/api/env/reveal`) no loopback via header
+  `X-Hermes-Session-Token`; fixa o token de sessão da app (sem ele, o dashboard gera um
+  efêmero a cada restart, invalidando sessões do Hermes Desktop)
+- **⚠️ Importante:** fora do backup do Drive — **guardar em gerenciador de senhas**.
+  Sem ele, o Hermes Desktop não mantém sessão após reiniciar o serviço.
+- **Relacionado — `dashboard.basic_auth` (config.yaml):** `username` + `password_hash`
+  (scrypt) + `secret` (HMAC de assinatura de sessão, 32 bytes) + `session_ttl_seconds=43200`.
+  Só é exigido quando o bind é **não-loopback** (`0.0.0.0`). No modelo atual
+  (loopback via tunnel) o Cloudflare Access é a camada auth externa.
+
+## 5. TELEGRAM_BOT_TOKEN (+ ALLOWED_USERS, HOME_CHANNEL)
 - **Local:** `~/.hermes/.env`
 - **Como obter:** falar com [@BotFather](https://t.me/BotFather) no Telegram → `/newbot` → copiar o token
 - **TELEGRAM_ALLOWED_USERS:** seu user ID (pedir ao @userinfobot ou usar o canal Home)
@@ -219,19 +242,19 @@ curl -s https://webui-01.asideia.net -o /dev/null -w "%{http_code}"
 - **Uso:** conexão do Hermes com o Telegram (canal principal de comunicação)
 - **⚠️ Se perder:** criar bot novo no BotFather e atualizar o .env (o histórico do Telegram fica com o bot antigo)
 
-## 5. OPENROUTER_API_KEY
+## 6. OPENROUTER_API_KEY
 - **Local:** `~/.hermes/.env`
 - **Como obter:** https://openrouter.ai/keys → Create key
 - **Uso:** modelos gratuitos/alternativos via OpenRouter (tarefas leves)
 
-## 6. auth.json (credenciais Nous/OpenAI-compatível)
+## 7. auth.json (credenciais Nous/OpenAI-compatível)
 - **Local:** `~/.hermes/auth.json`
 - **Como obter:** rodar `hermes auth login` (fluxo OAuth) ou configurar via `hermes auth`
 - **Contém:** access_token, refresh_token, agent_key do provider `nous`
 - **⚠️ Importante:** tokens OAuth expiram — o login deve ser refeito periodicamente
 - **Backup:** incluído no tar.gz do Drive (restaurado na Fase 3)
 
-## 7. Google Workspace (google_client_secret.json + google_token.json)
+## 8. Google Workspace (google_client_secret.json + google_token.json)
 - **Local:** `~/.hermes/google_client_secret.json` e `~/.hermes/google_token.json`
 - **Como obter:**
   1. Google Cloud Console → criar projeto → habilitar APIs (Drive, Gmail, Calendar, Sheets, Docs)
@@ -241,7 +264,7 @@ curl -s https://webui-01.asideia.net -o /dev/null -w "%{http_code}"
 - **Uso:** backup do Drive, email, calendário, sheets
 - **⚠️ Importante:** o token de refresh só pode ser gerado no primeiro fluxo OAuth — guarde o `client_secret.json`
 
-## 8. Email (Himalaya — senha de app Gmail)
+## 9. Email (Himalaya — senha de app Gmail)
 - **Local:** `~/.config/himalaya/config.toml` + script `get-password.sh`
 - **Como obter:**
   1. Google Account → Security → 2-Step Verification (obrigatório)
@@ -249,10 +272,11 @@ curl -s https://webui-01.asideia.net -o /dev/null -w "%{http_code}"
   3. Configurar em `~/.config/himalaya/config.toml` (conta `gmail`)
 - **Uso:** envio de emails via CLI (Himalaya)
 
-## 9. Cloudflare Tunnel (token do túnel)
+## 10. Cloudflare Tunnel (token do túnel)
 - **Não é um arquivo versionável** — é o token gerado no dashboard
 - **Como obter:** Cloudflare → Zero Trust → Networks → Tunnels → seu tunnel → token
-  (ou recriar o tunnel apontando `webui-01.asideia.net → http://localhost:8787`)
+  (ou recriar o tunnel apontando `webui-01.asideia.net → http://localhost:8787` e
+  `dashboard-01.asideia.net → http://localhost:9119`)
 - **Local no host:** `/etc/cloudflared/token` (lido pelo serviço `cloudflared.service`)
 - **⚠️ Se perder:** recriar no dashboard e reinstalar o token; conferir o ingress
   (hostname → serviço) e o Access
@@ -266,6 +290,8 @@ curl -s https://webui-01.asideia.net -o /dev/null -w "%{http_code}"
 | GITHUB_TOKEN | `/home/hermes/GITHUB_TOKEN.txt` | ✅ | GitHub → Developer settings |
 | .git-credentials | `/home/hermes/.git-credentials` | ✅ | automático no push |
 | WEBUI_PASSWORD | `~/hermes-webui/.env` | ❌ (manual) | gerar nova + editar .env + `ctl.sh restart` |
+| DASHBOARD_SESSION_TOKEN | `~/.hermes/.env` | ❌ (manual) | `secrets.token_urlsafe(48)` + restart dashboard |
+| dashboard.basic_auth.secret | `~/.hermes/config.yaml` | ❌ (manual) | `secrets.token_bytes(32)` + restart dashboard |
 | TELEGRAM_* | `~/.hermes/.env` | ✅ | BotFather → /newbot |
 | OPENROUTER_KEY | `~/.hermes/.env` | ✅ | openrouter.ai/keys |
 | auth.json (Nous) | `~/.hermes/auth.json` | ✅ | `hermes auth login` |
