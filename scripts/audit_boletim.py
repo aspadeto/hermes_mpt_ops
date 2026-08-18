@@ -1,378 +1,211 @@
 #!/usr/bin/env python3
 """audit_boletim.py — Auditoria de extração de Boletins de Serviço do MPT.
 
-Camada 1 (pré-visão): metadados + contagem de páginas + detecção de páginas
-    escaneadas (vazias → OCR necessário).
-Camada 2 (estrutural): detecção de atos/publicações dentro do BS usando
-    padrões recorrentes (PORTARIA, DESPACHO, AVISO, etc.).
-Camada 3 (opcional): extração → Markdown por ato + auditoria de completude,
-    cobertura de páginas e fidelidade de volume.
+Estrutura de um BS:
+  1. Capa: "BOLETIM DE SERVIÇO ELETRÔNICO NNN/AAAA - DD/MM/AAAA"
+  2. Expediente: lista de autoridades (PGT, VPGT, etc.)
+  3. Seções por unidade (PROCURADORIA-GERAL, PROCURADORIAS REGIONAIS)
+     Cada seção: cabeçalho + "ATOS DO/A [CARGO]" + atos individuais
+  4. Atos: PORTARIA N° XXXX, DECISÃO N° XXXX.AAAA, LICENÇA-PRÊMIO, etc.
+  5. Fecho
 
 Uso:
-    audit_boletim.py <BS.pdf> [--sem-extracao] [--saida DIR]
+    audit_boletim.py <BS.pdf>
+    audit_boletim.py <BS.pdf> [--saida DIR]
 
-Saída (em DIR, padrão /workspace):
-    <BS>.md              — extração MD por ato (se não --sem-extracao)
-    auditoria_<BS>.md    — relatório de auditoria (sempre)
+Saída:
+    auditoria_<BS>.md   — relatório de auditoria
 
-Referência: audit_pgea.py (autos digitais MPT). A estrutura de um BS difere
-de um PGEA — não há cabeçalho de peça padronizado. Em vez disso, o BS tem:
-1. Cabeçalho (BS Eletrônico - NNN/AAAA - DD/MM/AAAA)
-2. Índice/Sumário analítico com a lista de atos publicados
-3. Atos individuais (PORTARIA, DESPACHO, AVISO, etc.)
-4. Fecho com assinatura da autoridade
+Referência: audit_pgea.py. Adaptado para boletins em 18/08/2026.
 """
-
 import fitz, re, sys
 from pathlib import Path
-from collections import OrderedDict
-from datetime import datetime
 
-WORKSPACE = Path("/workspace")
+WD = Path("/opt/data/hermes-data/hermes_mpt_ops/scripts").resolve()
 
-# ==============================================================
-# DETECTORES
-# ==============================================================
-
-# Padrão do cabeçalho do BS no topo de cada página ou na primeira página
-BS_HEADER_RE = re.compile(
-    r"BS\s*Eletr[ôo]nico\s*[-–]\s*(\d+(?:\.\d+)?)/(\d{4})\s*[-–]\s*(\d{2}/\d{2}/\d{4})",
+# Regex para detectar seção/unidade organizacional
+SECAO_RE = re.compile(
+    r"^(PROCURADORIA[-\s]*(?:GERAL|REGIONA?I?S?)|"
+    r"PROCURADORIA\s+(?:DO\s+)?TRABALHO\s+(?:NO\s+)?MUNIC[ÍI]PIO|"
+    r"PTM\s|PRT[-\s]\d+[ªa]\s+REGI[ÃA]O|"
+    r"CÂMARA\s+(?:DE\s+)?(?:COORDENAÇÃO|REVISÃO)|"
+    r"CORREGEDORIA|OUVIDORIA|"
+    r"DIRETORIA\s+(?:DE\s+)?(?:ADMINISTRAÇÃO|GESTÃO|DOCUMENTAÇÃO)|"
+    r"SECRETARIA\s+(?:EXECUTIVA|GERAL)|"
+    r"GABINETE|"
+    r"COORDENADORIA)\b",
     re.IGNORECASE,
 )
 
-# Padrões de atos/publicações dentro do boletim
-# Portarias: PORTARIA Nº NNN/AAAA, PORTARIA CONJUNTA, etc.
-# Despachos: DESPACHO Nº NNN/AAAA
-# Avisos: AVISO Nº NNN/AAAA
-# Extratos: EXTRATO DE [...] Nº NNN/AAAA
-ACTO_HEADER_RE = re.compile(
-    r"^(?P<tipo>(?:PORTARIA\s*(?:CONJUNTA|CONJ|NORMATIVA|CONJUNTA\s*NORMATIVA|"
-    r"CONJUNTA\s*ADMINISTRATIVA)?|"
-    r"DESPACHO(?:\s*(?:ADMINISTRATIVO|DA\s*DIREÇÃO|DA\s*SECRETARIA))?|"
-    r"AVISO|EXTRATO\s*(?:DE\s*)?(?:INEXIGIBILIDADE|DISPENSA|CONTRATO|"
-    r"CONV[EÊ]NIO|ACORDO\s*(?:DE\s*)?COOPERAÇÃO|TERMO\s*(?:ADITIVO|DE\s*)?)?|"
-    r"ATA\s*(?:DE\s*)?(?:REGISTRO\s*DE\s*PREÇOS|SESSÃO)?|"
-    r"DECISÃO|RESOLUÇÃO|INSTRUÇÃO\s*NORMATIVA|"
-    r"EDITAL|COMUNICADO|RETIFICAÇÃO|ERRATA|"
-    r"ATO\s*(?:DO\s*(?:PROCURADOR|DIRETOR|SECRETÁRIO))?|"
-    r"RECOMENDAÇÃO|NOTIFICAÇÃO|INTIMAÇÃO|CITAÇÃO|"
-    r"REQUERIMENTO|OFÍCIO|MEMORANDO|PARECER|RELATÓRIO"
-    r"))\s*(?:N[º°ª]|N[úu]mero)?\s*(\d+(?:\.\d+)?(?:[A-Z])?)\s*(?:/\s*(\d{4}))?\b",
+# Regex para títulos de atos
+ATO_RE = re.compile(
+    r"^(?P<tipo>PORTARIA|DECISÃO|LICENÇA[-\s]PR[ÊE]MIO|"
+    r"ATO\s+(?:DO|DA)|DESPACHO|AVISO|EXTRATO|EDITAL|COMUNICADO|"
+    r"RETIFICAÇÃO|ERRATA|RESOLUÇÃO|INSTRUÇÃO\s+NORMATIVA|"
+    r"RECOMENDAÇÃO|NOTIFICAÇÃO|INTIMAÇÃO)\s*"
+    r"(?:N[°ºª]\s*)?(?P<num>\d+(?:\.\d+)?(?:\.[A-Z])?)\s*(?:,?\s*DE\s+\d+)?",
     re.IGNORECASE,
 )
 
-# Padrão alternativo: atos sem número no formato "NOME DO ATO"
-ACTO_SIMPLE_RE = re.compile(
-    r"^(?P<tipo>(?:PORTARIA|DESPACHO|AVISO|EXTRATO|ATA|DECISÃO|RESOLUÇÃO|"
-    r"INSTRUÇÃO\s*NORMATIVA|EDITAL|COMUNICADO|RETIFICAÇÃO|ERRATA|"
-    r"ATO|RECOMENDAÇÃO|NOTIFICAÇÃO|INTIMAÇÃO|CITAÇÃO|"
-    r"REQUERIMENTO|OFÍCIO|MEMORANDO|PARECER|RELATÓRIO))"
-    r"(?:\s+(?:N[º°ª]\s*)?\d+(?:\.\d+)?)?[:\s]",
+# Regex para subtítulos de atos (ex: "PORTARIAS", "ATOS DO PROCURADOR-GERAL")
+SUBATO_RE = re.compile(
+    r"^(ATOS?\s+(?:DO|DA)\s+|PORTARIAS?|DESPACHOS?|LICENÇAS?[-\s]PR[ÊE]MIO|"
+    r"DECISÕES?|AVISOS?|EXTRATOS?|EDITAIS?|RESOLUÇÕES?)",
     re.IGNORECASE,
 )
 
-# Índice/Sumário: linhas como "1. PORTARIA...", "1.1.", etc.
-SUMARIO_RE = re.compile(r"^\s*(?:\d+(?:\.\d+)*[\.\)]?\s+)?(?:PORTARIA|DESPACHO|AVISO|EXTRATO|ATA|DECISÃO|RESOLUÇÃO|EDITAL|COMUNICADO|RETIFICAÇÃO)", re.IGNORECASE)
 
-
-def detectar_bs_header(linha):
-    """Retorna dict com {numero, ano, data} ou None."""
-    m = BS_HEADER_RE.search(linha)
-    if m:
-        return {"numero": m.group(1), "ano": m.group(2), "data": m.group(3)}
-    return None
+def detectar_secao(linha):
+    m = SECAO_RE.match(linha.strip())
+    return m.group(1).strip().upper() if m else None
 
 
 def detectar_ato(linha):
-    """Retorna nome completo do ato (ex: 'PORTARIA Nº 123/2026') ou None."""
-    m = ACTO_HEADER_RE.match(linha.strip())
+    m = ATO_RE.match(linha.strip())
     if m:
-        tipo = " ".join(m.group("tipo").split())
-        num = m.group(2)
-        ano = m.group(3) or ""
-        return f"{tipo} Nº {num}{'/' + ano if ano else ''}"
-    # Fallback para padrão mais simples
-    m = ACTO_SIMPLE_RE.match(linha.strip())
-    if m:
-        tipo = " ".join(m.group("tipo").split())
-        return tipo
+        tipo = m.group("tipo").strip()
+        num = m.group("num")
+        return f"{tipo} N° {num}"
     return None
 
 
-# ==============================================================
-# FUNÇÕES DE APOIO
-# ==============================================================
-
-def intervalo(pags):
-    """Converte lista de páginas em string de intervalos."""
-    if not pags:
-        return "—"
-    ranges, ini, ant = [], None, None
-    for p in sorted(pags):
-        if ini is None:
-            ini = ant = p
-        elif p == ant + 1:
-            ant = p
-        else:
-            ranges.append((ini, ant))
-            ini = ant = p
-    if ini is not None:
-        ranges.append((ini, ant))
-    return ", ".join(f"{a}-{b}" if a != b else str(a) for a, b in ranges)
+def detectar_subato(linha):
+    m = SUBATO_RE.match(linha.strip())
+    return m.group(1).strip() if m else None
 
 
 def camada1(doc):
-    """Camada 1 - Pré-visão: metadados, contagem, páginas vazias."""
+    """Metadados + páginas vazias."""
     chars = {i + 1: len(doc[i].get_text().strip()) for i in range(doc.page_count)}
-    vazias = [p for p, c in chars.items() if p > 1 and c < 50]  # p>1: capa não conta
+    vazias = [p for p, c in chars.items() if p > 1 and c < 50]
     meta = {}
-    # Tentar extrair cabeçalho do BS da primeira página
-    primeira_pag = doc[0].get_text().strip()
-    bs_info = detectar_bs_header(primeira_pag)
-    if bs_info:
-        meta["bs_numero"] = bs_info["numero"]
-        meta["bs_ano"] = bs_info["ano"]
-        meta["bs_data"] = bs_info["data"]
+    primeira = doc[0].get_text().strip()
+    m = re.search(r"BOLETIM\s+DE\s+SERVIÇO\s+ELETR[OÔ]NICO\s+(\d+(?:\.\d+)?)/(\d{4})", primeira, re.I)
+    if m:
+        meta["bs_numero"] = m.group(1)
+        meta["bs_ano"] = m.group(2)
+    m = re.search(r"(\d{2}/\d{2}/\d{4})", primeira)
+    if m:
+        meta["bs_data"] = m.group(1)
     return meta, vazias, chars
 
 
 def camada2(doc):
-    """Camada 2 - Estrutural: detectar atos dentro do boletim.
-
-    Retorna (atos: [(nome, [pags])], sumario: [linhas], sem_ato: [pags]).
-    """
-    atos, atual, pags_sem_ato = [], None, []
+    """Extrai estrutura: seções, atos, sumário."""
+    secoes, atos_atual, pags_sem = [], [], []
+    pag_atual_secao = {}
     sumario_linhas = []
+    expediente = []
 
     for i in range(doc.page_count):
         txt = doc[i].get_text().strip()
-        if not txt or i == 0:
-            continue  # capa tratada separadamente
-
-        # Tentar detectar ato na primeira linha significativa
-        ato = None
-        for linha in txt.splitlines():
-            linha = linha.strip()
-            if len(linha) < 15:
-                continue
-            ato = detectar_ato(linha)
-            if ato:
-                break
-            # Verificar se é sumário
-            if SUMARIO_RE.match(linha):
-                sumario_linhas.append(linha)
-
-        if ato:
-            if ato != atual:
-                atual = ato
-                atos.append([atual, []])
-        elif atual is None and not sumario_linhas:
-            # Antes do primeiro ato e sem sumário — pode ser sumário
-            for linha in txt.splitlines():
-                if SUMARIO_RE.match(linha.strip()):
-                    sumario_linhas.append(linha.strip())
-
-        if atual:
-            atos[-1][1].append(i + 1)
-        else:
-            # Páginas que não foram atribuídas a nenhum ato
-            pags_sem_ato.append(i + 1)
-
-    return atos, sumario_linhas, pags_sem_ato
-
-
-def extrair_md(doc, atos, titulo, sumario_linhas):
-    """Gera Markdown por ato com marcadores <!-- pág N -->."""
-    blocos = {t: [] for t, _ in atos}
-    atual = None
-
-    # Capa (página 1)
-    md = [f"# {titulo}\n"]
-    md.append(f"> Extração auditada · {len(atos)} atos · {doc.page_count} págs\n")
-
-    capa_txt = doc[0].get_text().strip()
-    md.append("## Cabeçalho\n<!-- pág 1 -->\n" + capa_txt)
-
-    # Índice/Sumário
-    if sumario_linhas:
-        md.append("\n## Sumário/Índice\n" + "\n".join(sumario_linhas))
-
-    # Atos
-    for i in range(1, doc.page_count):
-        txt = doc[i].get_text().strip()
         if not txt:
             continue
+        lines = txt.split('\n')
+        if i == 0:
+            continue
 
-        ato = None
-        for linha in txt.splitlines():
-            linha = linha.strip()
-            if len(linha) < 15:
-                continue
-            ato = detectar_ato(linha)
-            if ato:
+        # Expediente na página 1 (índice 0)
+        if i == 1 and "PROCURADOR-GERAL" in txt:
+            expediente = [l.strip() for l in lines if l.strip() and len(l.strip()) > 3][:15]
+
+        # Detectar seção
+        secao = None
+        for linha in lines[:5]:
+            s = detectar_secao(linha)
+            if s:
+                secao = s
                 break
 
-        if ato and ato in blocos:
-            atual = ato
-        elif ato and ato not in blocos:
-            # Ato detectado mas não estava no inventário inicial
-            atual = ato
-            blocos[ato] = []
-            atos.append([ato, []])
+        # Detectar ato
+        ato = None
+        for linha in lines[:3]:
+            a = detectar_ato(linha)
+            if a:
+                ato = a
+                break
 
-        if atual and atual in blocos:
-            blocos[atual].append(f"\n<!-- pág {i + 1} -->\n{txt}")
+        subato = None
+        if not ato:
+            for linha in lines[:3]:
+                s = detectar_subato(linha)
+                if s:
+                    subato = s
+                    break
 
-    for t, _ in atos:
-        if t in blocos and blocos[t]:
-            md.append(f"\n## {t}\n" + "\n".join(blocos[t]))
+        if secao:
+            if not secoes or secoes[-1]["nome"] != secao:
+                secoes.append({"nome": secao, "pags": [], "atos": []})
+            pag_atual_secao[i + 1] = secao
 
-    return "\n".join(md)
+        if secoes:
+            secoes[-1]["pags"].append(i + 1)
 
+        if ato and secoes:
+            if ato not in [a["nome"] for a in secoes[-1]["atos"]]:
+                secoes[-1]["atos"].append({"nome": ato, "pag": i + 1})
+            atos_atual.append((i + 1, ato))
 
-def auditar_extracao(doc, md_text, atos, chars, total_pags):
-    """Camada 3 - auditoria da extração MD."""
-    linhas = []
-    md_atos = set(re.findall(r"^## (.+)$", md_text, re.M))
-    pag_markers = [int(m) for m in re.findall(r"<!-- pág (\d+) -->", md_text)]
-    md_chunks = dict(re.findall(r"<!-- pág (\d+) -->\n(.+?)(?=<!-- pág|\n## |\Z)", md_text, re.S))
+    # Páginas sem seção (capa, expediente, fecho)
+    pags_com_secao = set()
+    for s in secoes:
+        pags_com_secao.update(s["pags"])
+    pags_sem = [p for p in range(1, doc.page_count + 1) if p not in pags_com_secao and p > 1]
 
-    linhas.append("## ✅/❌ Camada 3 — Auditoria da Extração\n")
-
-    # Completude
-    nomes_inventario = {t for t, _ in atos}
-    faltando = nomes_inventario - md_atos
-    sobrando = md_atos - nomes_inventario - {"Cabeçalho", "Sumário/Índice"}
-    linhas.append(f"- Atos no inventário: **{len(atos)}** · Seções no MD: **{len(md_atos)}**")
-    if faltando:
-        linhas.append(f"- ❌ **Ausentes no MD:** {', '.join(faltando)}")
-    else:
-        linhas.append(f"- ✅ **Ausentes no MD:** nenhum")
-    if sobrando:
-        linhas.append(f"- ⚠️ **Seções extra sem ato correspondente:** {', '.join(sobrando)}")
-
-    # Cobertura de páginas
-    cobertas = {p for p in pag_markers}
-    nao_cobertas = [
-        p for p in range(1, total_pags + 1)
-        if p not in cobertas and p != 1 and chars.get(p, 0) >= 50
-    ]
-    total_conteudo = sum(1 for p in range(1, total_pags + 1) if chars.get(p, 0) >= 50)
-    linhas.append(f"- Páginas com conteúdo: {total_conteudo} · Cobertas: {len(cobertas)}" +
-                  (f" · ❌ Faltam: {nao_cobertas}" if nao_cobertas else " ✅"))
-
-    # Fidelidade por volume
-    linhas.append("\n| Pág | PDF chars | MD chars | Razão | Verdicto | Ato |")
-    linhas.append("|-----|-----------|----------|-------|----------|-----|")
-    suspeitas = 0
-
-    # Mapa ato → página
-    ato_por_pag = {}
-    for t, pags in atos:
-        for p in pags:
-            ato_por_pag[p] = t
-
-    for p in range(1, total_pags + 1):
-        c_pdf = chars.get(p, 0)
-        if c_pdf < 50:
-            continue
-        c_md = len(md_chunks.get(str(p), ""))
-        razao = c_md / c_pdf if c_pdf else 0
-        nome_ato = ato_por_pag.get(p, "—")
-
-        if c_pdf < 400:
-            # Página pequena: comparar conteúdo exato
-            raw = re.sub(r"<!-- pág \d+ -->", "", md_chunks.get(str(p), "")).strip()
-            ok = raw == doc[p - 1].get_text().strip()
-            v = "✅ idêntica" if ok else "❌ divergente"
-            if not ok:
-                suspeitas += 1
-        else:
-            v = "✅" if 0.88 <= razao <= 1.18 else ("⚠️" if 0.5 <= razao < 0.88 or 1.18 < razao <= 2 else "❌")
-            if v != "✅":
-                suspeitas += 1
-
-        linhas.append(f"| {p} | {c_pdf} | {c_md} | {razao:.2f} | {v} | {nome_ato} |")
-
-    linhas.append(f"\n**Pontos suspeitos: {suspeitas}** → para verificação manual (amostral)")
-    return "\n".join(linhas)
+    return secoes, expediente, pags_sem
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Uso: audit_boletim.py <BS.pdf> [--sem-extracao] [--saida DIR]")
+        print("Uso: audit_boletim.py <BS.pdf> [--saida DIR]")
         sys.exit(1)
-
     pdf = Path(sys.argv[1])
     if not pdf.exists():
-        print(f"❌ Arquivo não encontrado: {pdf}")
-        sys.exit(1)
-
-    sem_ext = "--sem-extracao" in sys.argv
-    outdir = Path(sys.argv[sys.argv.index("--saida") + 1]) if "--saida" in sys.argv else WORKSPACE
+        print(f"❌ Arquivo não encontrado: {pdf}"); sys.exit(1)
+    outdir = Path(sys.argv[sys.argv.index("--saida") + 1]) if "--saida" in sys.argv else WD
     outdir.mkdir(parents=True, exist_ok=True)
 
     doc = fitz.open(pdf)
-    TOTAL_PAGS = doc.page_count  # guardar ANTES de doc.close()!
+    TOTAL = doc.page_count
     titulo = pdf.stem
-
-    # ==============================================================
-    # RELATÓRIO DE AUDITORIA
-    # ==============================================================
-    rel = [f"# 🔍 Auditoria — {titulo}\n"]
-
-    # Camada 1
     meta, vazias, chars = camada1(doc)
+    secoes, expediente, pags_sem = camada2(doc)
+
+    rel = [f"# 🔍 Auditoria — {titulo}\n"]
     rel.append("## 📊 Camada 1 — Pré-visão\n")
     rel.append(f"- **Arquivo:** {pdf.name}")
-    rel.append(f"- **Páginas:** {TOTAL_PAGS}")
+    rel.append(f"- **Páginas:** {TOTAL}")
     if meta.get("bs_numero"):
         rel.append(f"- **BS:** {meta.get('bs_numero')}/{meta.get('bs_ano')} · **Data:** {meta.get('bs_data')}")
-    rel.append(f"- **Páginas vazias (escaneadas?):** {vazias if vazias else 'nenhuma ✅'}")
-    if vazias:
-        rel.append(f"  → ⚠️ {len(vazias)} páginas vazias detectadas. Pode ser PDF escaneado — considerar OCR.")
+    rel.append(f"- **Páginas vazias:** {len(vazias)} — {'✅' if not vazias else '⚠️ OCR?'}")
 
-    # Camada 2
-    atos, sumario_linhas, pags_sem_ato = camada2(doc)
-    rel.append(f"\n## 📑 Camada 2 — Atos Detectados\n")
-    rel.append(f"- **Atos encontrados:** {len(atos)}")
-    rel.append(f"- **Sumário/Índice detectado:** {'sim ✅' if sumario_linhas else 'não — pode estar embutido no texto'}")
-    rel.append(f"- **Páginas sem ato identificado:** {len(pags_sem_ato)} (capa, sumário, fecho — esperado)\n")
+    rel.append("\n## 📑 Camada 2 — Estrutura\n")
+    total_atos = sum(len(s["atos"]) for s in secoes)
+    rel.append(f"- **Seções (unidades):** {len(secoes)}")
+    rel.append(f"- **Atos identificados:** {total_atos}")
+    rel.append(f"- **Páginas sem seção (expediente/fecho):** {len(pags_sem)}\n")
 
-    if atos:
-        rel.append("| # | Ato | Páginas |")
-        rel.append("|---|-----|---------|")
-        for idx, (t, pags) in enumerate(atos, 1):
-            rel.append(f"| {idx} | {t} | {intervalo(pags)} |")
-    else:
-        rel.append("⚠️ Nenhum ato detectado com os padrões conhecidos.")
-        rel.append("  → Possíveis causas: PDF escaneado (imagem), formato de ato não reconhecido,")
-        rel.append("     ou boletim com estrutura atípica.")
-        rel.append("  → Solução: extrair texto manualmente e verificar.")
+    for s in secoes:
+        atos_str = ", ".join([a["nome"] for a in s["atos"]]) if s["atos"] else "(sem atos detectados)"
+        rel.append(f"### {s['nome']}")
+        rel.append(f"- Páginas: {s['pags'][0]}–{s['pags'][-1]}")
+        rel.append(f"- Atos ({len(s['atos'])}): {atos_str}\n")
 
-    # Camada 3
-    n_susp = "n/a"
-    if not sem_ext and atos:
-        md_path = outdir / f"{pdf.stem}.md"
-        md_path.write_text(extrair_md(doc, atos, titulo, sumario_linhas), encoding="utf-8")
+    if expediente:
+        rel.append("### 👤 Expediente (autoridades)")
+        for e in expediente[:10]:
+            rel.append(f"- {e}")
+        if len(expediente) > 10:
+            rel.append(f"  ... mais {len(expediente) - 10}")
 
-        md_text = md_path.read_text(encoding="utf-8")
-        rel.append(f"\n📄 **Extração gerada:** `{md_path.name}`\n")
-        audit_text = auditar_extracao(doc, md_text, atos, chars, TOTAL_PAGS)
-        rel.append(audit_text)
-        m_susp = re.search(r"Pontos suspeitos: (\d+)", audit_text)
-        n_susp = int(m_susp.group(1)) if m_susp else "n/a"
-
-    elif sem_ext:
-        rel.append("\n📄 Extração omitida (--sem-extracao)")
-        n_susp = "n/a"
-
+    # Estatísticas de atos
+    print(f"✅ {len(secoes)} seções, {total_atos} atos, {len(vazias)} vazias")
     doc.close()
 
-    # Salvar relatório
     out = outdir / f"auditoria_{pdf.stem}.md"
     out.write_text("\n".join(rel), encoding="utf-8")
-    print(f"✅ {out.name} — {len(atos)} atos, {len(vazias)} vazias, suspeitas: {n_susp}")
+    print(f"📄 Relatório: {out}")
+    print(f"📋 Preview:\n" + "\n".join(rel))
 
 
 if __name__ == "__main__":
