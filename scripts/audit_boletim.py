@@ -1,211 +1,121 @@
 #!/usr/bin/env python3
-"""audit_boletim.py — Auditoria de extração de Boletins de Serviço do MPT.
-
-Estrutura de um BS:
-  1. Capa: "BOLETIM DE SERVIÇO ELETRÔNICO NNN/AAAA - DD/MM/AAAA"
-  2. Expediente: lista de autoridades (PGT, VPGT, etc.)
-  3. Seções por unidade (PROCURADORIA-GERAL, PROCURADORIAS REGIONAIS)
-     Cada seção: cabeçalho + "ATOS DO/A [CARGO]" + atos individuais
-  4. Atos: PORTARIA N° XXXX, DECISÃO N° XXXX.AAAA, LICENÇA-PRÊMIO, etc.
-  5. Fecho
+"""audit_boletim.py — Auditoria de Boletins de Serviço do MPT.
 
 Uso:
-    audit_boletim.py <BS.pdf>
     audit_boletim.py <BS.pdf> [--saida DIR]
+    audit_boletim.py <BS.pdf> --json   (saída JSON compacta)
 
 Saída:
-    auditoria_<BS>.md   — relatório de auditoria
+    auditoria_<BS>.md — relatório markdown
 
-Referência: audit_pgea.py. Adaptado para boletins em 18/08/2026.
+Estrutura do BS:
+  Pág 1: Capa (título, data)
+  Pág 2: Expediente (autoridades)
+  Págs 3+: Seções PROCURADORIA-GERAL / PROCURADORIAS REGIONAIS
+  Dentro de cada seção: subseções e atos (PORTARIA, DECISÃO, LICENÇA)
+  Última pág: Fecho
 """
-import fitz, re, sys
+import pymupdf, re, sys, json
 from pathlib import Path
 
-WD = Path("/opt/data/hermes-data/hermes_mpt_ops/scripts").resolve()
+SECAO_RE = re.compile(r"^(PROCURADORIA[- ]GERAL|PROCURADORIAS?\s+REGIONAIS?\s*)", re.I)
 
-# Regex para detectar seção/unidade organizacional
-SECAO_RE = re.compile(
-    r"^(PROCURADORIA[-\s]*(?:GERAL|REGIONA?I?S?)|"
-    r"PROCURADORIA\s+(?:DO\s+)?TRABALHO\s+(?:NO\s+)?MUNIC[ÍI]PIO|"
-    r"PTM\s|PRT[-\s]\d+[ªa]\s+REGI[ÃA]O|"
-    r"CÂMARA\s+(?:DE\s+)?(?:COORDENAÇÃO|REVISÃO)|"
-    r"CORREGEDORIA|OUVIDORIA|"
-    r"DIRETORIA\s+(?:DE\s+)?(?:ADMINISTRAÇÃO|GESTÃO|DOCUMENTAÇÃO)|"
-    r"SECRETARIA\s+(?:EXECUTIVA|GERAL)|"
-    r"GABINETE|"
-    r"COORDENADORIA)\b",
-    re.IGNORECASE,
-)
+def analisar(pdf_path):
+    doc = pymupdf.open(pdf_path)
+    TOTAL = doc.page_count
+    capa = doc[0].get_text().strip()
 
-# Regex para títulos de atos
-ATO_RE = re.compile(
-    r"^(?P<tipo>PORTARIA|DECISÃO|LICENÇA[-\s]PR[ÊE]MIO|"
-    r"ATO\s+(?:DO|DA)|DESPACHO|AVISO|EXTRATO|EDITAL|COMUNICADO|"
-    r"RETIFICAÇÃO|ERRATA|RESOLUÇÃO|INSTRUÇÃO\s+NORMATIVA|"
-    r"RECOMENDAÇÃO|NOTIFICAÇÃO|INTIMAÇÃO)\s*"
-    r"(?:N[°ºª]\s*)?(?P<num>\d+(?:\.\d+)?(?:\.[A-Z])?)\s*(?:,?\s*DE\s+\d+)?",
-    re.IGNORECASE,
-)
+    meta = {"paginas": TOTAL, "vazias": 0, "secoes": [], "total_atos": 0}
+    m = re.search(r"BOLETIM\s+DE\s+SERVIÇO\s+ELETR[OÔ]NICO\s+(\d+(?:\.\d+)?)/(\d{4})", capa, re.I)
+    if m: meta["bs"] = f"{m.group(1)}/{m.group(2)}"
+    m = re.search(r"(\d{2}/\d{2}/\d{4})", capa)
+    if m: meta["data"] = m.group(1)
 
-# Regex para subtítulos de atos (ex: "PORTARIAS", "ATOS DO PROCURADOR-GERAL")
-SUBATO_RE = re.compile(
-    r"^(ATOS?\s+(?:DO|DA)\s+|PORTARIAS?|DESPACHOS?|LICENÇAS?[-\s]PR[ÊE]MIO|"
-    r"DECISÕES?|AVISOS?|EXTRATOS?|EDITAIS?|RESOLUÇÕES?)",
-    re.IGNORECASE,
-)
-
-
-def detectar_secao(linha):
-    m = SECAO_RE.match(linha.strip())
-    return m.group(1).strip().upper() if m else None
-
-
-def detectar_ato(linha):
-    m = ATO_RE.match(linha.strip())
-    if m:
-        tipo = m.group("tipo").strip()
-        num = m.group("num")
-        return f"{tipo} N° {num}"
-    return None
-
-
-def detectar_subato(linha):
-    m = SUBATO_RE.match(linha.strip())
-    return m.group(1).strip() if m else None
-
-
-def camada1(doc):
-    """Metadados + páginas vazias."""
-    chars = {i + 1: len(doc[i].get_text().strip()) for i in range(doc.page_count)}
-    vazias = [p for p, c in chars.items() if p > 1 and c < 50]
-    meta = {}
-    primeira = doc[0].get_text().strip()
-    m = re.search(r"BOLETIM\s+DE\s+SERVIÇO\s+ELETR[OÔ]NICO\s+(\d+(?:\.\d+)?)/(\d{4})", primeira, re.I)
-    if m:
-        meta["bs_numero"] = m.group(1)
-        meta["bs_ano"] = m.group(2)
-    m = re.search(r"(\d{2}/\d{2}/\d{4})", primeira)
-    if m:
-        meta["bs_data"] = m.group(1)
-    return meta, vazias, chars
-
-
-def camada2(doc):
-    """Extrai estrutura: seções, atos, sumário."""
-    secoes, atos_atual, pags_sem = [], [], []
-    pag_atual_secao = {}
-    sumario_linhas = []
-    expediente = []
-
-    for i in range(doc.page_count):
+    secoes = []
+    atual = None
+    for i in range(1, TOTAL):
         txt = doc[i].get_text().strip()
-        if not txt:
-            continue
-        lines = txt.split('\n')
-        if i == 0:
-            continue
+        if not txt: continue
+        if len(txt) < 50: meta["vazias"] += 1
 
-        # Expediente na página 1 (índice 0)
-        if i == 1 and "PROCURADOR-GERAL" in txt:
-            expediente = [l.strip() for l in lines if l.strip() and len(l.strip()) > 3][:15]
+        lines = [l.strip() for l in txt.split('\n') if l.strip()]
+        if not lines: continue
 
-        # Detectar seção
         secao = None
-        for linha in lines[:5]:
-            s = detectar_secao(linha)
-            if s:
-                secao = s
-                break
+        for l in lines[:2]:
+            m = SECAO_RE.match(l)
+            if m: secao = m.group(1).strip().upper(); break
 
-        # Detectar ato
-        ato = None
-        for linha in lines[:3]:
-            a = detectar_ato(linha)
-            if a:
-                ato = a
-                break
+        if secao != atual:
+            if atual is not None:
+                secoes[-1]["fim"] = i
+            secoes.append({"nome": secao or "?","inicio": i+1, "fim": i+1, "subsecoes": [], "atos": 0})
+            atual = secao
 
-        subato = None
-        if not ato:
-            for linha in lines[:3]:
-                s = detectar_subato(linha)
-                if s:
-                    subato = s
-                    break
+        # Detectar subseção / categoria de ato
+        for l in lines[:3]:
+            ml = re.match(r"^(ATOS?\s+(?:DO|DA)|PORTARIAS?|LICENÇA[- ]PR[ÊE]MIO|DESPACHOS?|DECISÃO)", l, re.I)
+            if ml:
+                nome = ml.group(1).strip()
+                if not secoes[-1]["subsecoes"] or secoes[-1]["subsecoes"][-1]["nome"] != nome:
+                    secoes[-1]["subsecoes"].append({"nome": nome, "inicio": i+1, "atos": 0})
 
-        if secao:
-            if not secoes or secoes[-1]["nome"] != secao:
-                secoes.append({"nome": secao, "pags": [], "atos": []})
-            pag_atual_secao[i + 1] = secao
+        # Contar linhas que parecem conter atos (começam com N°, Art., número, etc.)
+        if re.match(r"^(N[°º]\s*\d+|Art\.|\d+[°º])", lines[0], re.I):
+            secoes[-1]["atos"] += 1
+            if secoes[-1]["subsecoes"]:
+                secoes[-1]["subsecoes"][-1]["atos"] += 1
 
-        if secoes:
-            secoes[-1]["pags"].append(i + 1)
+    if secoes:
+        secoes[-1]["fim"] = TOTAL
 
-        if ato and secoes:
-            if ato not in [a["nome"] for a in secoes[-1]["atos"]]:
-                secoes[-1]["atos"].append({"nome": ato, "pag": i + 1})
-            atos_atual.append((i + 1, ato))
-
-    # Páginas sem seção (capa, expediente, fecho)
-    pags_com_secao = set()
-    for s in secoes:
-        pags_com_secao.update(s["pags"])
-    pags_sem = [p for p in range(1, doc.page_count + 1) if p not in pags_com_secao and p > 1]
-
-    return secoes, expediente, pags_sem
+    doc.close()
+    meta["secoes"] = secoes
+    meta["total_atos"] = sum(s["atos"] for s in secoes)
+    return meta
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Uso: audit_boletim.py <BS.pdf> [--saida DIR]")
-        sys.exit(1)
+        print("Uso: audit_boletim.py <BS.pdf> [--saida DIR] [--json]"); sys.exit(1)
     pdf = Path(sys.argv[1])
-    if not pdf.exists():
-        print(f"❌ Arquivo não encontrado: {pdf}"); sys.exit(1)
-    outdir = Path(sys.argv[sys.argv.index("--saida") + 1]) if "--saida" in sys.argv else WD
+    if not pdf.exists(): print(f"❌ Não encontrado: {pdf}"); sys.exit(1)
+    outdir = Path.cwd()
+    saida_json = False
+    for a in sys.argv[1:]:
+        if a.startswith("--saida"):
+            idx = sys.argv.index(a)
+            if idx + 1 < len(sys.argv):
+                outdir = Path(sys.argv[idx + 1])
+        elif a == "--json": saida_json = True
+
+    meta = analisar(pdf)
+    if saida_json:
+        print(json.dumps(meta, indent=2, ensure_ascii=False))
+        return
+
     outdir.mkdir(parents=True, exist_ok=True)
-
-    doc = fitz.open(pdf)
-    TOTAL = doc.page_count
-    titulo = pdf.stem
-    meta, vazias, chars = camada1(doc)
-    secoes, expediente, pags_sem = camada2(doc)
-
-    rel = [f"# 🔍 Auditoria — {titulo}\n"]
-    rel.append("## 📊 Camada 1 — Pré-visão\n")
-    rel.append(f"- **Arquivo:** {pdf.name}")
-    rel.append(f"- **Páginas:** {TOTAL}")
-    if meta.get("bs_numero"):
-        rel.append(f"- **BS:** {meta.get('bs_numero')}/{meta.get('bs_ano')} · **Data:** {meta.get('bs_data')}")
-    rel.append(f"- **Páginas vazias:** {len(vazias)} — {'✅' if not vazias else '⚠️ OCR?'}")
+    rel = [f"# 🔍 Auditoria — {pdf.stem}\n"]
+    rel.append("## 📊 Camada 1 — Visão Geral\n")
+    rel.append(f"- **Arquivo:** {pdf.name}  \n- **Páginas:** {meta['paginas']}")
+    if meta.get("bs"): rel.append(f"- **BS:** {meta['bs']} · **Data:** {meta.get('data','?')}")
+    rel.append(f"- **Páginas vazias/escaneadas:** {meta['vazias']} {'✅' if meta['vazias']==0 else '⚠️'}")
 
     rel.append("\n## 📑 Camada 2 — Estrutura\n")
-    total_atos = sum(len(s["atos"]) for s in secoes)
-    rel.append(f"- **Seções (unidades):** {len(secoes)}")
-    rel.append(f"- **Atos identificados:** {total_atos}")
-    rel.append(f"- **Páginas sem seção (expediente/fecho):** {len(pags_sem)}\n")
+    rel.append(f"- **Seções:** {len(meta['secoes'])}  \n- **Atos detectados:** {meta['total_atos']}\n")
+    for s in meta["secoes"]:
+        sub_info = ""
+        if s["subsecoes"]:
+            cats = {}
+            for sub in s["subsecoes"]:
+                cats[sub["nome"]] = cats.get(sub["nome"], 0) + sub["atos"]
+            sub_info = " · " + ", ".join(f"{k}: {v}" for k, v in cats.items())
+        rel.append(f"### 🏢 {s['nome']} (págs {s['inicio']}–{s['fim']}, {s['atos']} atos){sub_info}")
 
-    for s in secoes:
-        atos_str = ", ".join([a["nome"] for a in s["atos"]]) if s["atos"] else "(sem atos detectados)"
-        rel.append(f"### {s['nome']}")
-        rel.append(f"- Páginas: {s['pags'][0]}–{s['pags'][-1]}")
-        rel.append(f"- Atos ({len(s['atos'])}): {atos_str}\n")
-
-    if expediente:
-        rel.append("### 👤 Expediente (autoridades)")
-        for e in expediente[:10]:
-            rel.append(f"- {e}")
-        if len(expediente) > 10:
-            rel.append(f"  ... mais {len(expediente) - 10}")
-
-    # Estatísticas de atos
-    print(f"✅ {len(secoes)} seções, {total_atos} atos, {len(vazias)} vazias")
-    doc.close()
-
+    print(f"✅ {pdf.name}: {meta['paginas']} págs, {len(meta['secoes'])} seções, {meta['total_atos']} atos")
     out = outdir / f"auditoria_{pdf.stem}.md"
-    out.write_text("\n".join(rel), encoding="utf-8")
-    print(f"📄 Relatório: {out}")
-    print(f"📋 Preview:\n" + "\n".join(rel))
+    out.write_text("\n".join(rel))
+    for l in rel: print(l)
 
 
 if __name__ == "__main__":
