@@ -35,3 +35,7 @@ Thumbs.db
 !data/processos.db
 # OBS: atos.db É versionado (catálogo de atos normativos de Boletins de Serviço — ago/2026)
 !data/atos.db
+
+# Índice invertido dos MDs — artefato REGENERÁVEL pelo pesquisar_boletins.py
+# (não versionar; recriado na primeira execução se ausente)
+data/indices/_indice_md.json

@@ -19,8 +19,12 @@ catalogar_atos.py → SQLite (data/atos.db)
 | Script | Função | Localização |
 |--------|--------|-------------|
 | `baixar_boletim.py` | Lista/baixa BS via cloudscraper | `hermes_mpt_ops/scripts/` |
-| `processar_boletins_novos.py` | Extrai texto PDF→MD, organiza por data | `/opt/data/hermes-data/` (criado ad-hoc, deve migrar para OPS) |
+| `extrair_md_boletins.py` | Extrai texto PDF→MD plano (frontmatter + páginas) | `hermes_mpt_ops/scripts/` |
 | `catalogar_atos.py` | Detecta atos normativos, popula SQLite | `hermes_mpt_ops/scripts/` |
+
+> ⚠️ Os scripts ad-hoc `processar_boletins_novos.py` e `processar_todos_boletins.py`
+> foram **substituídos** pelo versionado `extrair_md_boletins.py` e removidos
+> (limpeza 20/08/2026). Para converter PDFs→MD, usar o script do OPS.
 
 ## Exemplo de uso completo (preenchimento gap Jul/2025 → Jan/2026)
 
@@ -36,8 +40,9 @@ for mes in JUL AUG SET OUT NOV DEZ JAN; do
   sleep 3
 done
 
-# 3. Converter PDFs → MD nas pastas YYYY-MM-DD/
-python3 processar_todos_boletins.py
+# 3. Converter PDFs → MD (script versionado)
+python3 hermes_mpt_ops/scripts/extrair_md_boletins.py \
+  --orig hermes_mpt_kb/raw/boletins --dest hermes_mpt_kb/boletins
 
 # 4. Catalogar atos no SQLite
 python3 hermes_mpt_ops/scripts/catalogar_atos.py --raiz boletins --db data/atos.db
@@ -58,7 +63,7 @@ python3 hermes_mpt_ops/scripts/catalogar_atos.py --raiz boletins --db data/atos.
 
 1. **O script `baixar_boletim.py` usa cloudscraper** — bypassa o WAF do mpt.mp.br (headless browsers são bloqueados por detecção JS, não IP).
 
-2. **Organização em pastas `YYYY-MM-DD`** — o `catalogar_atos.py` espera essa estrutura. O script ad-hoc `processar_todos_boletins.py` faz a conversão + organização usando o mapeamento número→data das consultas.
+2. **Organização em pastas `YYYY-MM-DD`** — o `catalogar_atos.py` espera essa estrutura. O script versionado `extrair_md_boletins.py` faz a conversão + organização usando a data extraída do PDF (CIRCULAÇÃO/cabeçalho).
 
 3. **Catálogo detecta 25+ tipos de ato** — PORTARIA, RESOLUÇÃO, INSTRUÇÃO NORMATIVA, DECISÃO, EDITAL, DESPACHO, AVISO, EXTRATO, ATA, COMUNICADO, RETIFICAÇÃO, OFÍCIO, REQUERIMENTO, PARECER, RELATÓRIO, MEMORANDO, etc.
 
@@ -68,11 +73,10 @@ python3 hermes_mpt_ops/scripts/catalogar_atos.py --raiz boletins --db data/atos.
 
 6. **WAF instável em certos meses** — Fev/2026 falhou com erro `form consultaForm não encontrado` (ViewState); Mar–Jun/2026 retornaram "nenhum boletim encontrado". O cloudscraper bypassa o WAF mas o servidor às vezes retorna HTML quebrado ou vazio. Re-tentar com retry/backoff (ex: 3 tentativas com delay exponencial) resolve na maioria dos casos.
 
-7. **Mapeamento número→data essencial** — o script de processamento precisa do dicionário `ALL_BOLETINS` (número → data) para organizar os MDs nas pastas corretas. Coletar isso via consulta prévia (sem baixar) antes de rodar o download em lote.
+7. **Mapeamento número→data** — o `extrair_md_boletins.py` extrai a data direto do PDF (CIRCULAÇÃO/cabeçalho da capa), não depende de dicionário manual.
 
 ## Próximos passos sugeridos
 
-- Integrar `processar_todos_boletins.py` ao repo OPS como script versionado
 - Automatizar via cron (ex: toda segunda 06:00, últimos 7 dias)
 - Adicionar verificação de integridade (PDFs baixados vs catalogados)
 - Implementar retry/backoff no `baixar_boletim.py` para meses com WAF instável (Fev–Jun/2026)

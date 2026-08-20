@@ -27,7 +27,7 @@ from pathlib import Path
 # Configuracao
 # ------------------------------------------------------------
 DIR_RAIZ = Path("/opt/data/hermes-data")
-DIR_INDICE = DIR_RAIZ / "_tmp_benchmark_atos"
+DIR_INDICE = DIR_RAIZ / "hermes_mpt_ops" / "data" / "indices"
 DIR_MDS = DIR_RAIZ / "hermes_mpt_kb" / "boletins"
 ARQ_INDICE_CSV = DIR_INDICE / "atos_normativos.csv"
 
