@@ -69,7 +69,11 @@ def main():
     if args.todos:
         pdfs = sorted(RAIZ_PDF.glob("*.pdf"))
     elif args.pdf:
-        pdfs = [RAIZ_PDF / p for p in args.pdf]
+        # aceita nome com ou sem extensão .pdf
+        pdfs = []
+        for p in args.pdf:
+            base = p if p.endswith(".pdf") else f"{p}.pdf"
+            pdfs.append(RAIZ_PDF / base)
     else:
         pdfs = [RAIZ_PDF / p for p in
                 ["BS-012-2025.pdf", "BS-144-2025.pdf", "BS-050-2025.pdf", "BS-145-2026.pdf"]]
