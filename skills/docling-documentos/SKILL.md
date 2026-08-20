@@ -30,27 +30,32 @@ boletins do MPT (ago/2026): 5/5 acertos.
 # no .tool-venv (Python 3.12)
 uv pip install --python /opt/data/hermes-data/.tool-venv/bin/python docling
 # requer Python >= 3.10; baixa modelos de layout/OCR na primeira execução (centenas de MB)
+# CPU: ~124s/boletim, ~1.5GB RAM por processo. VM: 3 jobs paralelos (limite RAM)
 ```
+
+## Diretório de saída
+
+**Definitivo:** `hermes_mpt_kb/boletins_docling/` (markdown estruturado por boletim `BS-NNN-AAAA.md`)
 
 ## Scripts (versionados no OPS)
 
 | Script | Função |
 |--------|--------|
-| `hermes_mpt_ops/scripts/converter_docling.py` | PDF → markdown estruturado + JSON (árvore) + texto |
+| `hermes_mpt_ops/scripts/converter_docling.py` | PDF → markdown estruturado (paralelo, `--jobs N`) |
 | `hermes_mpt_ops/scripts/pesquisar_docling.py` | Pesquisa por estrutura Docling (headings + tabelas) |
 
 ## Uso
 
 ```bash
-# Converter PDFs (default: 4 boletins relevantes da PoC)
+# Converter todos os boletins (paralelo 3 jobs, só MD)
 /opt/data/hermes-data/.tool-venv/bin/python \
-  hermes_mpt_ops/scripts/converter_docling.py --pdf BS-012-2025.pdf BS-144-2025.pdf
+  hermes_mpt_ops/scripts/converter_docling.py --todos --dest hermes_mpt_kb/boletins_docling --jobs 3
 
-# Converter todos
+# Converter PDFs específicos
 /opt/data/hermes-data/.tool-venv/bin/python \
-  hermes_mpt_ops/scripts/converter_docling.py --todos
+  hermes_mpt_ops/scripts/converter_docling.py --pdf BS-012-2025.pdf BS-144-2025.pdf --dest hermes_mpt_kb/boletins_docling
 
-# Pesquisar (pergunta)
+# Pesquisar (pergunta) — lê de boletins_docling/
 /opt/data/hermes-data/.tool-venv/bin/python \
   hermes_mpt_ops/scripts/pesquisar_docling.py "Qual portaria altera a PRT10?"
 ```
@@ -82,6 +87,7 @@ o Docling faz via RapidOCR); fórmulas complexas podem degradar.
 - **`export_to_dict()` retorna dict** — serializar com `json.dumps(..., ensure_ascii=False)` antes de escrever.
 - **Primeira conversão baixa modelos** (layout/OCR) e demora mais.
 - **Conversão ~2-3min/PDF em CPU** (vs. PyMuPDF instantâneo) — usar seletivamente.
+- **RAM limitada:** usar `--jobs 3` em VM de 4.8GB (3 × ~1.5GB ≈ 4.5GB).
 - **Mesmo número de ato pode existir em várias regionais** (ex: várias "Nº 26") — buscar DENTRO da seção da regional alvo (`## PRT-18ª REGIÃO`).
 - **`Nº X` pode ser heading OU texto corrido** no output Docling — testar ambos.
 - Avisos `NNPACK: Unsupported hardware` são inofensivos (sem otimização, roda em CPU).
@@ -91,3 +97,4 @@ o Docling faz via RapidOCR); fórmulas complexas podem degradar.
 - Repo: `https://github.com/docling-project/docling`
 - Doc: `https://docling-project.github.io/docling/`
 - Relatório técnico: arXiv 2408.09869
+
