@@ -165,10 +165,13 @@ def escrever_toml(atos, path):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Exporta atos_normativos dos MDs em 4 formatos")
+    ap = argparse.ArgumentParser(description="Exporta atos_normativos dos MDs em formatos")
     ap.add_argument("--raiz", default="/opt/data/hermes-data/hermes_mpt_kb/boletins")
     ap.add_argument("--base", default="atos_normativos")
     ap.add_argument("--dest", required=True, help="Pasta de saída (obrigatório)")
+    ap.add_argument("--formato", nargs="+", default=["csv"],
+                    choices=["csv", "md", "tsv", "toml"],
+                    help="Formatos a gerar (default: csv — único usado na indexação)")
     args = ap.parse_args()
 
     raiz = Path(args.raiz)
@@ -180,14 +183,19 @@ def main():
     print(f"  → {len(atos)} atos detectados em {len(list(raiz.glob('*.md')))} MDs")
 
     dest.mkdir(parents=True, exist_ok=True)
-    escrever_md(atos, dest / f"{args.base}.md")
-    escrever_csv(atos, dest / f"{args.base}.csv")
-    escrever_tsv(atos, dest / f"{args.base}.tsv")
-    escrever_toml(atos, dest / f"{args.base}.toml")
+    if "md" in args.formato:
+        escrever_md(atos, dest / f"{args.base}.md")
+    if "csv" in args.formato:
+        escrever_csv(atos, dest / f"{args.base}.csv")
+    if "tsv" in args.formato:
+        escrever_tsv(atos, dest / f"{args.base}.tsv")
+    if "toml" in args.formato:
+        escrever_toml(atos, dest / f"{args.base}.toml")
 
-    for ext in ["md", "csv", "tsv", "toml"]:
+    for ext in args.formato:
         p = dest / f"{args.base}.{ext}"
-        print(f"  ✅ {p.name}: {p.stat().st_size:,} bytes")
+        if p.exists():
+            print(f"  ✅ {p.name}: {p.stat().st_size:,} bytes")
 
     print("\n✅ Exportação concluída em:", dest)
 
