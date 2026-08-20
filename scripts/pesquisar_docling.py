@@ -23,7 +23,7 @@ import sys
 import time
 from pathlib import Path
 
-POC_DIR = Path("/opt/data/hermes-data/_poc_docling")
+POC_DIR = Path("/opt/data/hermes-data/hermes_mpt_kb/boletins_docling")
 
 # ============================================================
 # Extração de entidades da pergunta (reuso da lógica do baseline)
