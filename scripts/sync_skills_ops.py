@@ -52,6 +52,8 @@ CUSTOM_SKILLS = {
     "container-host-ssh",
     "selfhosted-remote-access",
     "tailscale-remote-access",
+    # --- Docling (conversão estruturada de PDFs) ---
+    "docling-documentos",
 }
 
 # Extensões a copiar dentro de scripts/ e references/
