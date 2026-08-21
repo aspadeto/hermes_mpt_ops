@@ -36,7 +36,7 @@ Use quando o usuário:
    - Converter 1 PDF por vez (decisão do usuário)
 2. **Converter** (1 PDF por vez — decisão do usuário):
    ```bash
-   cd /opt/data/hermes-data/hermes_mpt_kb
+   cd /opt/data/hermes-data/mpt_workspace/hermes_mpt_kb
    .venv/bin/python3 scripts/pdf2kb.py <caminho-do-pdf.pdf>
    # opcional: --slug nome-da-pasta
    ```
@@ -64,8 +64,8 @@ Use quando o usuário:
 
 ## Dependências
 
-- Venv: `/opt/data/hermes-data/hermes_mpt_kb/.venv` (PyMuPDF/pymupdf)
-- Setup: `cd /opt/data/hermes-data/hermes_mpt_kb && uv venv .venv && uv pip install pymupdf`
+- Venv: `/opt/data/hermes-data/mpt_workspace/hermes_mpt_kb/.venv` (PyMuPDF/pymupdf)
+- Setup: `cd /opt/data/hermes-data/mpt_workspace/hermes_mpt_kb && uv venv .venv && uv pip install pymupdf`
 - Usar `.venv/bin/python3` (NUNCA `python3` — system Python tem PEP 668)
 - Script canônico: **`hermes_mpt_ops/scripts/pdf2kb.py`** (repo hermes_mpt_ops — fonte da verdade; desde ago/2026 scripts não vivem mais no KB, e o script foi renomeado de `pdf2wiki.py` para `pdf2kb.py` na migração de nomes neutros). Symlink local em `hermes_mpt_kb/scripts/pdf2kb.py` para compatibilidade (NÃO versionado — ver `.gitignore` do KB).
 
@@ -91,7 +91,7 @@ Use quando o usuário:
 O usuário prefere **trabalho assíncrono**: quando algo precisa de confirmação dele (indexação, despacho, decisão), NÃO bloquear a conversa esperando resposta — criar uma pendência e seguir trabalhando em outras tarefas.
 
 - Script: `~/.hermes/scripts/pendencia.py` (wrapper real p/ cron; o código versionado vive em `hermes_mpt_ops/scripts/pendencia.py` — nunca symlink, ver skill `hermes-cron-automation`)
-- Banco: SQLite **`/opt/data/hermes-data/hermes_mpt_ops/data/pendencias.db`** — VERSIONADO no repo hermes_mpt_ops (migrou do KB em ago/2026; `.gitignore` do OPS tem exceção `!data/pendencias.db`, demais `*.db` ignorados). NÃO usar o caminho antigo `/opt/data/hermes-data/hermes_mpt_kb/data/pendencias.db`.
+- Banco: SQLite **`/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/data/pendencias.db`** — VERSIONADO no repo hermes_mpt_ops (migrou do KB em ago/2026; `.gitignore` do OPS tem exceção `!data/pendencias.db`, demais `*.db` ignorados). NÃO usar o caminho antigo `/opt/data/hermes-data/mpt_workspace/hermes_mpt_kb/data/pendencias.db`.
 - Lembretes: 3 cron jobs (`remind`) às 9h/14h/18h UTC — silenciosos quando não há pendências
 - Gatilho do usuário: **"resolver pendências"** → apresentar uma a uma
 - Prioridades: `alta` 🔴 bloqueia fluxo | `media` 🟡 padrão | `baixa` 🟢 pode esperar
@@ -111,11 +111,11 @@ O usuário prefere **trabalho assíncrono**: quando algo precisa de confirmaçã
 ## Pitfalls
 
 - **Symlinks do KB podem quebrar após renomeação do repo OPS:** os links em
-  `hermes_mpt_kb/scripts/` apontam para `/opt/data/hermes-data/hermes_mpt_ops/scripts/`.
+  `hermes_mpt_kb/scripts/` apontam para `/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/`.
   Após renomeações de repo (ex: `dr_mpt_ops` → `hermes_mpt_ops`, ago/2026), os
   links ficam órfãos — `python3 scripts/pdf2kb.py` falha com "No such file".
   **Sintoma:** `can't open file '.../scripts/pdf2kb.py'`. **Correção:** apontar
-  o symlink para o caminho atual (`ln -sf /opt/data/hermes-data/hermes_mpt_ops/scripts/pdf2kb.py scripts/pdf2kb.py`)
+  o symlink para o caminho atual (`ln -sf /opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/pdf2kb.py scripts/pdf2kb.py`)
   ou chamar o script canônico do OPS diretamente. Conferir com `ls -la scripts/`.
 - **PDFs do arXiv (papers):** a heurística de autores NÃO funciona — papers usam
   "1st/2nd/3rd Nome" ou "Nome†‡" com emails/afiliações, sem bios "Mestre/Doutor".

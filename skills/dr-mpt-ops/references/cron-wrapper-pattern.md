@@ -18,7 +18,7 @@ O código REAL dos scripts vive versionado em `hermes_mpt_ops/scripts/` (repo gi
 ```bash
 #!/bin/bash
 # Wrapper — executa o script versionado no hermes_mpt_ops.
-exec /opt/data/hermes-data/hermes_mpt_ops/scripts/meu-script.sh "$@"
+exec /opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/meu-script.sh "$@"
 ```
 
 ### 2. Wrapper python (sem argumentos)
@@ -29,8 +29,8 @@ exec /opt/data/hermes-data/hermes_mpt_ops/scripts/meu-script.sh "$@"
 import runpy
 import sys
 
-sys.argv[0] = "/opt/data/hermes-data/hermes_mpt_ops/scripts/meu-script.py"
-runpy.run_path("/opt/data/hermes-data/hermes_mpt_ops/scripts/meu-script.py", run_name="__main__")
+sys.argv[0] = "/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/meu-script.py"
+runpy.run_path("/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/meu-script.py", run_name="__main__")
 ```
 
 ### 3. Wrapper python com argumento FIXO (ex: modo remind)
@@ -44,7 +44,7 @@ import runpy
 import sys
 
 sys.argv = ["pendencia.py", "remind"]
-runpy.run_path("/opt/data/hermes-data/hermes_mpt_ops/scripts/pendencia.py", run_name="__main__")
+runpy.run_path("/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/pendencia.py", run_name="__main__")
 ```
 
 ## ⚠️ Pitfall crítico: write_file segue symlink

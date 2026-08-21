@@ -39,7 +39,7 @@ O nome `YYYY-MM-DD` permite ordenação/visualização cronológica.
 
 ## Banco SQLite
 
-`/opt/data/hermes-data/hermes_mpt_ops/data/atos.db` (versionado no git):
+`/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/data/atos.db` (versionado no git):
 
 ```
 boletins(id, data "2024-11-06", numero "212/2024", pdf, md)

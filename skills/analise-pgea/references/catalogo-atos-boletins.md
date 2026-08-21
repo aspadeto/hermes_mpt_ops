@@ -32,7 +32,7 @@ cd hermes_mpt_ops
 # venv com cloudscraper + pymupdf (criar uma vez)
 .venv-bol/bin/python scripts/catalogar_atos.py \
   --raiz /opt/data/hermes-data/boletins \
-  --db /opt/data/hermes-data/hermes_mpt_ops/data/atos.db --recriar
+  --db /opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/data/atos.db --recriar
 ```
 
 O parser detecta cada ato pelo gatilho real no texto (não pelas seções `##` do

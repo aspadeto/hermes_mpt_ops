@@ -11,7 +11,7 @@ de saída plana, um arquivo por boletim. Dependência: PyMuPDF, venv
 `hermes_mpt_ops/.venv-bol` (o mesmo usado pelo `baixar_boletim.py`).
 
 ```bash
-cd /opt/data/hermes-data/hermes_mpt_ops
+cd /opt/data/hermes-data/mpt_workspace/hermes_mpt_ops
 .venv-bol/bin/python scripts/extrair_md_boletins.py \
   --orig hermes_mpt_kb/raw/boletins --dest hermes_mpt_kb/boletins \
   [--filtro glob]    # default *.pdf; use para testar 1 arquivo antes do lote

@@ -25,8 +25,8 @@ Contexto: ago/2026 — repos `dr_mpt_kb`/`dr_mpt_ops` renomeados para `hermes_mp
 
 | De | Para |
 |----|------|
-| `/opt/data/hermes-data/wiki` | `/opt/data/hermes-data/hermes_mpt_kb` |
-| `/opt/data/hermes-data/dr_mpt_ops` | `/opt/data/hermes-data/hermes_mpt_ops` |
+| `/opt/data/hermes-data/wiki` | `/opt/data/hermes-data/mpt_workspace/hermes_mpt_kb` |
+| `/opt/data/hermes-data/dr_mpt_ops` | `/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops` |
 | `aspadeto/dr_mpt_kb` | `aspadeto/hermes_mpt_kb` |
 | `aspadeto/dr_mpt_ops` | `aspadeto/hermes_mpt_ops` |
 | `prt14.db` | `regional-orcamento.db` (+ arquivo de dados `demandas-orcamento-prt14-*.html.md` → `demandas-orcamento-regional-*.html.md`) |
@@ -39,8 +39,8 @@ Contexto: ago/2026 — repos `dr_mpt_kb`/`dr_mpt_ops` renomeados para `hermes_mp
 ```bash
 # Em scripts (todos .py/.sh)
 sed -i \
-  -e 's|/opt/data/hermes-data/wiki|/opt/data/hermes-data/hermes_mpt_kb|g' \
-  -e 's|/opt/data/hermes-data/dr_mpt_ops|/opt/data/hermes-data/hermes_mpt_ops|g' \
+  -e 's|/opt/data/hermes-data/wiki|/opt/data/hermes-data/mpt_workspace/hermes_mpt_kb|g' \
+  -e 's|/opt/data/hermes-data/dr_mpt_ops|/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops|g' \
   -e 's|prt14\.db|regional-orcamento.db|g' \
   -e 's|WIKI_PATH|KB_PATH|g' \
   *.py *.sh
@@ -62,7 +62,7 @@ grep -rn "dr_mpt_ops\|hermes-data/wiki\|prt14" *.py *.sh
 ## Verificação final (checklist)
 
 ```bash
-ls -d /opt/data/hermes-data/hermes_mpt_*        # pastas
+ls -d /opt/data/hermes-data/mpt_workspace/hermes_mpt_*        # pastas
 git -C <repo> remote get-url origin             # remotes novos
 git -C <repo> status --short                    # limpo = push ok
 grep -rn "nome_antigo" <repo> --include="*.py" --include="*.sh" --include="*.md"  # limpo

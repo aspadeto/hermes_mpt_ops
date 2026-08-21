@@ -5,7 +5,7 @@ Script: `hermes_mpt_ops/scripts/pdf2wiki.py` (versionado). Symlink local em `wik
 ## Uso
 
 ```bash
-cd /opt/data/hermes-data/hermes_mpt_kb && .venv/bin/python3 scripts/pdf2wiki.py <arquivo.pdf> [--slug nome] [--no-render] [--dpi 150]
+cd /opt/data/hermes-data/mpt_workspace/hermes_mpt_kb && .venv/bin/python3 scripts/pdf2wiki.py <arquivo.pdf> [--slug nome] [--no-render] [--dpi 150]
 ```
 
 Flags:

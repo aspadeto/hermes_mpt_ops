@@ -55,7 +55,7 @@ cab = re.compile(
 ## Uso
 ```bash
 cd /tmp
-/opt/data/hermes-data/hermes_mpt_ops/.venv-bol-md/bin/python \
-  /opt/data/hermes-data/hermes_mpt_ops/scripts/indexar_boletins_prt14.py \
+/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/.venv-bol-md/bin/python \
+  /opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/indexar_boletins_prt14.py \
   /tmp/md-out2025/ --db /tmp/boletins_idx.db
 ```

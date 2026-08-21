@@ -11,9 +11,9 @@ Desenvolvido em ago/2026 para testar qual formato de arquivo (.md, .csv, .tsv, .
 ## Uso
 
 ```bash
-cd /opt/data/hermes-data/hermes_mpt_ops
+cd /opt/data/hermes-data/mpt_workspace/hermes_mpt_ops
 .venv-bol/bin/python scripts/exportar_atos_formatos.py \
-  --raiz /opt/data/hermes-data/hermes_mpt_kb/boletins \
+  --raiz /opt/data/hermes-data/mpt_workspace/hermes_mpt_kb/boletins \
   --dest /opt/data/hermes-data/_tmp_benchmark_atos
 ```
 

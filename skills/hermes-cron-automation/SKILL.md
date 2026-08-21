@@ -48,7 +48,7 @@ que delega para o código versionado. O wrapper é arquivo REAL (nunca symlink).
 ```bash
 #!/bin/bash
 # Wrapper para cron — executa o script versionado no hermes_mpt_ops.
-exec /opt/data/hermes-data/hermes_mpt_ops/scripts/kb-auto-commit.sh "$@"
+exec /opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/kb-auto-commit.sh "$@"
 ```
 
 ### Wrapper Python (.py)
@@ -57,8 +57,8 @@ exec /opt/data/hermes-data/hermes_mpt_ops/scripts/kb-auto-commit.sh "$@"
 #!/usr/bin/env python3
 """Wrapper para cron — executa o script versionado no hermes_mpt_ops."""
 import runpy, sys
-sys.argv[0] = "/opt/data/hermes-data/hermes_mpt_ops/scripts/pendencia.py"
-runpy.run_path("/opt/data/hermes-data/hermes_mpt_ops/scripts/pendencia.py", run_name="__main__")
+sys.argv[0] = "/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/pendencia.py"
+runpy.run_path("/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/pendencia.py", run_name="__main__")
 ```
 
 ### Wrapper com argumentos fixos (modo dedicado)
@@ -70,7 +70,7 @@ Cron não aceita args → crie um wrapper por modo:
 """Wrapper dedicado para o cron de LEMBRETE (modo remind)."""
 import runpy, sys
 sys.argv = ["pendencia.py", "remind"]
-runpy.run_path("/opt/data/hermes-data/hermes_mpt_ops/scripts/pendencia.py", run_name="__main__")
+runpy.run_path("/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/pendencia.py", run_name="__main__")
 ```
 
 ## Padrão Watchdog (no_agent)

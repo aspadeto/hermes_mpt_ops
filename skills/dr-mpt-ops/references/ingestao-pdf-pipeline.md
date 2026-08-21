@@ -11,7 +11,7 @@ Pipeline padronizado para converter PDFs (portarias, manuais, artigos, papers) e
 ## Fluxo Completo
 
 ```bash
-cd /opt/data/hermes-data/hermes_mpt_kb
+cd /opt/data/hermes-data/mpt_workspace/hermes_mpt_kb
 .venv/bin/python scripts/pdf2kb.py <arquivo.pdf> [--dest DIR] [--slug NOME] [--no-render]
 ```
 

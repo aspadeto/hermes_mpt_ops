@@ -50,7 +50,7 @@ else:
 
 | Erro | Causa |
 |------|-------|
-| `Blocked: script path resolves outside the scripts directory (...): 'wiki-auto-commit.sh'` | O cron tinha `script: wiki-auto-commit.sh` que era **symlink** para `/opt/data/hermes-data/hermes_mpt_ops/...` — o resolve() seguiu o symlink e o guard bloqueou |
+| `Blocked: script path resolves outside the scripts directory (...): 'wiki-auto-commit.sh'` | O cron tinha `script: wiki-auto-commit.sh` que era **symlink** para `/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/...` — o resolve() seguiu o symlink e o guard bloqueou |
 | `Script not found: /home/hermes/.hermes/scripts/pendencia.py remind` | Campo `script` com **argumento** — o cron tratou `"pendencia.py remind"` como nome de arquivo inteiro |
 | `Script path must be relative to ~/.hermes/scripts/. Got absolute path: '/opt/data/...'` | Campo `script` com **caminho absoluto** (rejeitado na validação do cronjob tool) |
 
