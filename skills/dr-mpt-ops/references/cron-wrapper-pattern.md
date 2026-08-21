@@ -9,7 +9,7 @@ O campo `script` de um cron job (`no_agent=true`) exige:
 
 ## Motivo da arquitetura
 
-O código REAL dos scripts vive versionado em `OPS_PATH/scripts/` (repo git). O cron não consegue apontar para lá diretamente, então `~/.hermes/scripts/` contém **wrappers** que executam o código versionado. Wrappers NÃO são versionados (são atalhos de ambiente).
+O código REAL dos scripts vive versionado em `hermes_mpt_ops/scripts/` (repo git). O cron não consegue apontar para lá diretamente, então `~/.hermes/scripts/` contém **wrappers** que executam o código versionado. Wrappers NÃO são versionados (são atalhos de ambiente).
 
 ## Modelos
 
@@ -17,20 +17,20 @@ O código REAL dos scripts vive versionado em `OPS_PATH/scripts/` (repo git). O 
 
 ```bash
 #!/bin/bash
-# Wrapper — executa o script versionado no OPS.
-exec OPS_PATH/scripts/meu-script.sh "$@"
+# Wrapper — executa o script versionado no hermes_mpt_ops.
+exec /opt/data/hermes-data/hermes_mpt_ops/scripts/meu-script.sh "$@"
 ```
 
 ### 2. Wrapper python (sem argumentos)
 
 ```python
 #!/usr/bin/env python3
-"""Wrapper — executa o script versionado no OPS."""
+"""Wrapper — executa o script versionado no hermes_mpt_ops."""
 import runpy
 import sys
 
-sys.argv[0] = "OPS_PATH/scripts/meu-script.py"
-runpy.run_path("OPS_PATH/scripts/meu-script.py", run_name="__main__")
+sys.argv[0] = "/opt/data/hermes-data/hermes_mpt_ops/scripts/meu-script.py"
+runpy.run_path("/opt/data/hermes-data/hermes_mpt_ops/scripts/meu-script.py", run_name="__main__")
 ```
 
 ### 3. Wrapper python com argumento FIXO (ex: modo remind)
@@ -44,7 +44,7 @@ import runpy
 import sys
 
 sys.argv = ["pendencia.py", "remind"]
-runpy.run_path("OPS_PATH/scripts/pendencia.py", run_name="__main__")
+runpy.run_path("/opt/data/hermes-data/hermes_mpt_ops/scripts/pendencia.py", run_name="__main__")
 ```
 
 ## ⚠️ Pitfall crítico: write_file segue symlink

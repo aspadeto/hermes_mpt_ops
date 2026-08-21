@@ -1,11 +1,11 @@
-# Pipeline PDF → Wiki (pdf2kb.py)
+# Pipeline PDF → Wiki (pdf2wiki.py)
 
-Script: `OPS_PATH/scripts/pdf2kb.py` (versionado). Symlink local em `KB_PATH/scripts/pdf2kb.py`.
+Script: `hermes_mpt_ops/scripts/pdf2wiki.py` (versionado). Symlink local em `wiki/scripts/pdf2wiki.py`.
 
 ## Uso
 
 ```bash
-cd KB_PATH && .venv/bin/python3 scripts/pdf2kb.py <arquivo.pdf> [--slug nome] [--no-render] [--dpi 150]
+cd /opt/data/hermes-data/hermes_mpt_kb && .venv/bin/python3 scripts/pdf2wiki.py <arquivo.pdf> [--slug nome] [--no-render] [--dpi 150]
 ```
 
 Flags:
@@ -16,7 +16,7 @@ Flags:
 ## Saída
 
 ```
-KB_PATH/raw/articles/<slug>/
+wiki/raw/articles/<slug>/
 ├── artigo.md          ← Markdown convertido (texto por página + tabelas)
 ├── assets/            ← PNGs de páginas com tabelas + imagens bitmap extraídas
 ├── fonte.pdf          ← PDF original (fonte imutável)

@@ -2,16 +2,16 @@
 
 ## Visão Geral
 
-Pipeline padronizado para converter PDFs (portarias, manuais, artigos, papers) em artigos Markdown estruturados na base de conhecimento (`KB_PATH/raw/articles/<slug>/`).
+Pipeline padronizado para converter PDFs (portarias, manuais, artigos, papers) em artigos Markdown estruturados na base de conhecimento (`hermes_mpt_kb/raw/articles/<slug>/`).
 
 ## Script Canônico
 
-`OPS_PATH/scripts/pdf2kb.py` (anteriormente `pdf2wiki.py`)
+`hermes_mpt_ops/scripts/pdf2kb.py` (anteriormente `pdf2wiki.py`)
 
 ## Fluxo Completo
 
 ```bash
-cd KB_PATH
+cd /opt/data/hermes-data/hermes_mpt_kb
 .venv/bin/python scripts/pdf2kb.py <arquivo.pdf> [--dest DIR] [--slug NOME] [--no-render]
 ```
 

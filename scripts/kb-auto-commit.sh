@@ -5,6 +5,11 @@
 #   - hermes_mpt_ops (engenharia)    OPS_DIR
 # Usado pelo cron (a cada 10 min). Silencioso quando não há mudanças.
 
+# ── Paths (com fallback, consistente com bootstrap.sh) ──────────────────────
+HERMES_DATA="${HERMES_DATA:-/opt/data/hermes-data}"
+OPS_DIR="${OPS_DIR:-$HERMES_DATA/mpt_workspace/hermes_mpt_ops}"
+KB_DIR="${KB_DIR:-$HERMES_DATA/mpt_workspace/hermes_mpt_kb}"
+
 REPOS=(
   "${KB_DIR}:hermes_mpt_kb"
   "${OPS_DIR}:hermes_mpt_ops"

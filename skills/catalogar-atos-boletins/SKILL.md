@@ -34,12 +34,12 @@ relacionados ao assunto — abrindo o `.md` do boletim ou re-baixando o PDF.
 ## Organização de arquivos
 
 Os boletins vivem em pastas **`YYYY-MM-DD`** (data de circulação), cada uma com
-PDF + `.md` extraído + `auditoria_*.md`. Raiz: `KB_BOLETINS/`.
+PDF + `.md` extraído + `auditoria_*.md`. Raiz: `/opt/data/hermes-data/boletins/`.
 O nome `YYYY-MM-DD` permite ordenação/visualização cronológica.
 
 ## Banco SQLite
 
-`OPS_DATA/atos.db` (versionado no git):
+`/opt/data/hermes-data/hermes_mpt_ops/data/atos.db` (versionado no git):
 
 ```
 boletins(id, data "2024-11-06", numero "212/2024", pdf, md)

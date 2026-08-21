@@ -30,7 +30,7 @@ Use esta skill quando o usuário:
 ## Estrutura de Armazenamento
 
 ```
-KB_PATH/
+wiki/
 ├── pgeas/                          ← PGEAs da PRT14 (em andamento)
 │   ├── index.md                    ← Catálogo com status
 │   ├── pgea-biblioteca/            ← Cada PGEA em sua pasta

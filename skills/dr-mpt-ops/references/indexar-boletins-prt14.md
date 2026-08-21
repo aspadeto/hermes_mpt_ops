@@ -4,7 +4,7 @@
 Pipeline de teste pesado: baixou 24 boletins OUT/2025 (19MB) → PDF→MD (`audit_boletim.py`) → indexação PRT14 → SQLite → PDFs apagados.
 
 ## Script versionado
-`OPS_PATH/scripts/indexar_boletins_prt14.py`
+`hermes_mpt_ops/scripts/indexar_boletins_prt14.py`
 
 **Entrada:** diretório com MDs extraídos (`audit_boletim.py` gera headers `## TIPO Nº X`)
 
@@ -30,7 +30,7 @@ O boletim tem uma seção `PROCURADORIAS REGIONAIS` que contém **várias region
 
 ```python
 cab = re.compile(
-    r"PRT-?\s*(\d{1,2})[ªa]\s*REGI[ÃA]O(?:s*[–-]\s*[A-ZÇÃÉÍÓÚÊ /]+)?",
+    r"PRT-?\s*(\d{1,2})[ªa]\s*REGI[ÃA]O(?:s*[–-]s*[A-ZÇÃÉÍÓÚÊ /]+)?",
     re.IGNORECASE,
 )
 ```
@@ -55,7 +55,7 @@ cab = re.compile(
 ## Uso
 ```bash
 cd /tmp
-OPS_PATH/.venv-bol-md/bin/python \
-  OPS_PATH/scripts/indexar_boletins_prt14.py \
+/opt/data/hermes-data/hermes_mpt_ops/.venv-bol-md/bin/python \
+  /opt/data/hermes-data/hermes_mpt_ops/scripts/indexar_boletins_prt14.py \
   /tmp/md-out2025/ --db /tmp/boletins_idx.db
 ```
