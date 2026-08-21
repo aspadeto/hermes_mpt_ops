@@ -6,20 +6,20 @@ Desenvolvido em ago/2026 para testar qual formato de arquivo (.md, .csv, .tsv, .
 
 ## Script
 
-`hermes_mpt_ops/scripts/exportar_atos_formatos.py`
+`OPS_PATH/scripts/exportar_atos_formatos.py`
 
 ## Uso
 
 ```bash
-cd /opt/data/hermes-data/hermes_mpt_ops
+cd OPS_PATH
 .venv-bol/bin/python scripts/exportar_atos_formatos.py \
-  --raiz /opt/data/hermes-data/hermes_mpt_kb/boletins \
+  --raiz KB_BOLETINS \
   --dest /opt/data/hermes-data/_tmp_benchmark_atos
 ```
 
 ## Fonte dos Dados
 
-Lê os **MDs planos** de `hermes_mpt_kb/boletins/*.md` (508 arquivos, frontmatter com `data:` de circulação). Para cada MD:
+Lê os **MDs planos** de `KB_BOLETINS/*.md` (508 arquivos, frontmatter com `data:` de circulação). Para cada MD:
 
 1. Parseia o frontmatter YAML (simples, sem lib yaml)
 2. Chama `catalogar_atos.atos_por_arquivo(md)` — **a mesma lógica do catálogo SQLite** — para detectar atos (PORTARIA, DECISÃO, RESOLUÇÃO, etc.)

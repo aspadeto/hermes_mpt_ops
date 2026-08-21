@@ -10,11 +10,13 @@ import xml.etree.ElementTree as ET
 import os
 import re
 from datetime import datetime
+from pathlib import Path
 
-OPS_PATH = os.environ.get('OPS_PATH', '/opt/data/hermes-data/hermes_mpt_ops')
-KB_PATH = os.environ.get('KB_PATH', '/opt/data/hermes-data/hermes_mpt_kb')
-DB_PATH = os.path.join(OPS_PATH, 'data', 'regional-orcamento.db')
-ODS_DIR = os.path.join(KB_PATH, 'raw', 'to-process')
+# Importa configuração centralizada de caminhos
+from ops_paths import OPS_PATH, KB_PATH, OPS_DATA
+
+DB_PATH = OPS_DATA / "regional-orcamento.db"
+ODS_DIR = KB_PATH / "raw" / "to-process"
 
 def parse_valor(v):
     """Converte string brasileira R$ 1.234,56 para float."""

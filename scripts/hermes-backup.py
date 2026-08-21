@@ -13,8 +13,11 @@ import tarfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+# Importa configuração centralizada de caminhos
+from ops_paths import HERMES_DATA_ROOT, OPS_DIR, KB_DIR, OPS_DATA
+
 HERMES_HOME = "/home/hermes/.hermes"
-DATA_DIR = "/opt/data/hermes-data"
+DATA_DIR = str(HERMES_DATA_ROOT)
 VENV_PYTHON = "/opt/data/hermes-data/.google-venv/bin/python"
 API_SCRIPT = f"{HERMES_HOME}/skills/productivity/google-workspace/scripts/google_api.py"
 BACKUP_DIR = "/tmp/hermes-backup"
@@ -40,9 +43,9 @@ EXCLUDE_PATTERNS = [
     ".skills_prompt_snapshot.json",
 ]
 
-# Excluded from data/ — repos git (hermes_mpt_kb, hermes_mpt_ops) são versionados no GitHub,
+# Excluded from data/ — repos git são versionados no GitHub,
 # backups/ é alvo da rotação, .google-venv é ambiente
-DATA_EXCLUDE = {".google-venv", "hermes_mpt_kb", "hermes_mpt_ops", "backups"}
+DATA_EXCLUDE = {".google-venv", "mpt_workspace", "backups"}
 
 # Segredos/config do HOST fora dos 2 diretórios padrão (VM nativa — ago/2026).
 # Cada tupla: (caminho_origem_no_host, arcname_dentro_do_tar.gz).

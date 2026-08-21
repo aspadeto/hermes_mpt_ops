@@ -26,9 +26,8 @@ import sqlite3
 import sys
 from pathlib import Path
 
-# ---------------------------------------------------------------
-# Padrões
-# ---------------------------------------------------------------
+# Importa configuração centralizada de caminhos
+from ops_paths import OPS_DATA, KB_BOLETINS
 
 # Seções de atos dentro do boletim (título que precede a lista de atos)
 SECAO_RE = re.compile(
@@ -369,10 +368,10 @@ def aplicar_curadoria(db: sqlite3.Connection, arquivo: Path) -> int:
 
 def main():
     ap = argparse.ArgumentParser(description="Catálogo de atos de Boletins de Serviço do MPT")
-    ap.add_argument("--raiz", default="boletins", help="dir com pastas YYYY-MM-DD")
-    ap.add_argument("--db", default="atos.db", help="caminho do banco sqlite")
+    ap.add_argument("--raiz", default=str(KB_BOLETINS), help="dir com pastas YYYY-MM-DD")
+    ap.add_argument("--db", default=str(OPS_DATA / "atos.db"), help="caminho do banco sqlite")
     ap.add_argument("--recriar", action="store_true", help="dropa e recria as tabelas")
-    ap.add_argument("--curadoria", default="data/curadoria_atos.json",
+    ap.add_argument("--curadoria", default=str(OPS_DATA / "curadoria_atos.json"),
                     help="arquivo JSON de curadoria persistente")
     args = ap.parse_args()
 

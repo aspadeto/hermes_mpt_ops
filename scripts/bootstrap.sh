@@ -27,6 +27,8 @@ set -euo pipefail
 
 # ── Config ──────────────────────────────────────────────────────────────────
 HERMES_DATA="${HERMES_DATA:-$HOME/hermes-data}"
+OPS_DIR="${OPS_DIR:-$HERMES_DATA/mpt_workspace/hermes_mpt_ops}"
+KB_DIR="${KB_DIR:-$HERMES_DATA/mpt_workspace/hermes_mpt_kb}"
 OPS_URL="https://github.com/aspadeto/hermes_mpt_ops.git"
 KB_URL="https://github.com/aspadeto/hermes_mpt_kb.git"
 RESTORE_BACKUP=""
@@ -82,22 +84,22 @@ fi
 [[ -z "$TOKEN" ]] && warn "GITHUB_TOKEN não encontrado — clones públicos funcionarão, privados falharão"
 
 # Clone hermes_mpt_ops
-if [[ ! -d hermes_mpt_ops/.git ]]; then
+if [[ ! -d "$OPS_DIR/.git" ]]; then
   if [[ -n "$TOKEN" ]]; then
-    git clone "https://aspadeto:${TOKEN}@github.com/aspadeto/hermes_mpt_ops.git" && ok "hermes_mpt_ops clonado (privado)"
+    git clone "https://aspadeto:${TOKEN}@github.com/aspadeto/hermes_mpt_ops.git" "$OPS_DIR" && ok "hermes_mpt_ops clonado (privado)"
   else
-    git clone "https://github.com/aspadeto/hermes_mpt_ops.git" && ok "hermes_mpt_ops clonado (público)"
+    git clone "https://github.com/aspadeto/hermes_mpt_ops.git" "$OPS_DIR" && ok "hermes_mpt_ops clonado (público)"
   fi
 else
   ok "hermes_mpt_ops já existe"
 fi
 
 # Clone hermes_mpt_kb
-if [[ ! -d hermes_mpt_kb/.git ]]; then
+if [[ ! -d "$KB_DIR/.git" ]]; then
   if [[ -n "$TOKEN" ]]; then
-    git clone "https://aspadeto:${TOKEN}@github.com/aspadeto/hermes_mpt_kb.git" && ok "hermes_mpt_kb clonado (privado)"
+    git clone "https://aspadeto:${TOKEN}@github.com/aspadeto/hermes_mpt_kb.git" "$KB_DIR" && ok "hermes_mpt_kb clonado (privado)"
   else
-    git clone "https://github.com/aspadeto/hermes_mpt_kb.git" && ok "hermes_mpt_kb clonado (público)"
+    git clone "https://github.com/aspadeto/hermes_mpt_kb.git" "$KB_DIR" && ok "hermes_mpt_kb clonado (público)"
   fi
 else
   ok "hermes_mpt_kb já existe"
@@ -212,7 +214,7 @@ else
 fi
 
 # OPS scripts (hermes-backup.py, pendencia.py, etc.)
-cd "$HERMES_DATA/hermes_mpt_ops"
+cd "$OPS_DIR"
 if [[ -f "pyproject.toml" || -f "requirements.txt" ]]; then
   uv sync --frozen 2>/dev/null || uv sync
   ok "OPS: deps instaladas"
@@ -363,8 +365,8 @@ fi
 # ── Fase 8: Backup inicial ──────────────────────────────────────────────────
 log "Fase 8: Backup inicial (Drive)"
 
-if [[ -f "$HERMES_DATA/hermes_mpt_ops/scripts/hermes-backup.py" ]]; then
-  cd "$HERMES_DATA/hermes_mpt_ops"
+if [[ -f "$OPS_DIR/scripts/hermes-backup.py" ]]; then
+  cd "$OPS_DIR"
   # hermes-backup.py já lê config e faz backup para Drive
   python3 scripts/hermes-backup.py 2>&1 | tail -5
   ok "Backup executado (verifique logs acima)"
@@ -377,7 +379,7 @@ log "Bootstrap concluído!"
 
 echo ""
 echo "  Resumo:"
-echo "    - Repositórios: $HERMES_DATA/hermes_mpt_ops, hermes_mpt_kb"
+echo "    - Repositórios: $OPS_DIR, $KB_DIR"
 echo "    - Credenciais Git: $GIT_CREDS_FILE"
 echo "    - WebUI: http://127.0.0.1:8787 (senha no .env)"
 echo "    - Gateway: systemd --user (hermes-gateway)"
@@ -387,7 +389,7 @@ echo ""
 echo "  Próximos passos:"
 echo "    - Verificar WebUI: curl -s http://127.0.0.1:8787/health"
 echo "    - Verificar Telegram: envie msg ao bot"
-echo "    - Verificar pendências: $HERMES_DATA/hermes_mpt_ops/scripts/pendencia.py stats"
+echo "    - Verificar pendências: $OPS_DIR/scripts/pendencia.py stats"
 echo "    - Cron jobs: hermes config set cron.enabled true (se desativado)"
 echo ""
 echo "  ⚠️  IMPORTANTE:"

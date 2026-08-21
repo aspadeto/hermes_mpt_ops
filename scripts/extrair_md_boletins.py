@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """extrair_md_boletins.py — Converte PDFs de boletins em Markdown plano (frontmatter + páginas).
 
-Lê os PDFs de uma origem (default: hermes_mpt_kb/raw/boletins/) e gera, para cada
-PDF, un arquivo .md PLANO no destino (default: hermes_mpt_kb/boletins/), replicando
+Lê os PDFs de uma origem (default: KB_RAW_BOLETINS/) e gera, para cada
+PDF, un arquivo .md PLANO no destino (default: KB_BOLETINS/), replicando
 o formato de boletín já usado na base:
 
     ---
@@ -25,8 +25,8 @@ o formato de boletín já usado na base:
     <!-- pag 2 -->
     ...
 
-Objetivo: padronizar o almacenamiento dos boletins MD na raíz de
-hermes_mpt_kb/boletins/ (SEM subcarpetas por mês), de forma reproducible e
+Objetivo: padronizar o almacenamento dos boletins MD na raíz de
+KB_BOLETINS/ (SEM subcarpetas por mês), de forma reproducible e
 versionada (estrutura plana, un arquivo por boletín).
 
 Uso:
@@ -47,7 +47,8 @@ try:
 except ImportError:
     sys.exit("Erro: PyMuPDF não instalado. Use: uv venv .venv && uv pip install pymupdf")
 
-# Época do MPT em Espanhol (nome do môdulo en português)
+# Importa configuração centralizada de caminhos
+from ops_paths import KB_RAW_BOLETINS, KB_BOLETINS
 MESES = {
     "ENERO": "01", "FEVEREIRO": "02", "MARÇO": "03", "ABRIL": "04",
     "MAIO": "05", "JUNHO": "06", "JULHO": "07", "AGOSTO": "08",
@@ -171,10 +172,10 @@ def converter_pdf(pdf: Path) -> str:
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Convierte PDFs de boletines a Markdown plano en hermes_mpt_kb/boletins")
-    ap.add_argument("--orig", default="/opt/data/hermes-data/hermes_mpt_kb/raw/boletins",
+    ap = argparse.ArgumentParser(description="Convierte PDFs de boletines a Markdown plano en KB_BOLETINS")
+    ap.add_argument("--orig", default=str(KB_RAW_BOLETINS),
                     help="Carpeta con PDFs de boletines (default: KB/raw/boletins)")
-    ap.add_argument("--dest", default="/opt/data/hermes-data/hermes_mpt_kb/boletins",
+    ap.add_argument("--dest", default=str(KB_BOLETINS),
                     help="Carpeta de salida para MDs planos (default: KB/boletins)")
     ap.add_argument("--filtro", default="*.pdf",
                     help="Glob de filtro (default: *.pdf)")

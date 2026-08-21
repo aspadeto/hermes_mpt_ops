@@ -17,15 +17,16 @@ import sqlite3
 import os
 import sys
 
-OPS_PATH = os.environ.get('OPS_PATH', '/opt/data/hermes-data/hermes_mpt_ops')
-DB_PATH = os.path.join(OPS_PATH, 'data', 'regional-orcamento.db')
+# Importa configuração centralizada de caminhos
+from ops_paths import OPS_PATH, OPS_DATA
 
 def conectar():
-    if not os.path.exists(DB_PATH):
-        print(f"ERRO: Banco não encontrado em {DB_PATH}")
+    db_path = OPS_DATA / "regional-orcamento.db"
+    if not db_path.exists():
+        print(f"ERRO: Banco não encontrado em {db_path}")
         print("Execute primeiro: python3 scripts/importar-demandas.py")
         sys.exit(1)
-    return sqlite3.connect(DB_PATH)
+    return sqlite3.connect(db_path)
 
 def query(sql, params=None):
     conn = conectar()

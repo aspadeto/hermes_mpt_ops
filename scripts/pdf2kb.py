@@ -19,7 +19,7 @@ Estrutura de saída (padrão: wiki/raw/articles/<slug>/):
     assets/            ← imagens e páginas renderizadas
     fonte.pdf          ← PDF original
 
-Dependências: PyMuPDF (pymupdf) — venv em /opt/data/hermes-data/hermes_mpt_kb/.venv
+Dependências: PyMuPDF (pymupdf)
 """
 
 import argparse
@@ -29,6 +29,9 @@ import shutil
 import sys
 from datetime import date
 from pathlib import Path
+
+# Importa configuração centralizada de caminhos
+from ops_paths import KB_PATH, KB_RAW_BOLETINS, KB_BOLETINS, KB_DATA
 
 try:
     import fitz  # PyMuPDF
@@ -280,7 +283,7 @@ def converter_pdf(pdf_path: Path, dest: Path, render_tabelas: bool, dpi: int) ->
 def main():
     parser = argparse.ArgumentParser(description="Converte PDF para Markdown + assets na wiki")
     parser.add_argument("pdf", help="Caminho do arquivo PDF")
-    parser.add_argument("--dest", default="/opt/data/hermes-data/hermes_mpt_kb/raw/articles",
+    parser.add_argument("--dest", default=str(KB_RAW_BOLETINS / "articles"),
                         help="Pasta base de destino (default: wiki/raw/articles)")
     parser.add_argument("--slug", help="Nome da pasta de destino (default: derivado do nome do PDF)")
     parser.add_argument("--no-render", action="store_true",

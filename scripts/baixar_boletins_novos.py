@@ -4,7 +4,7 @@ baixar_boletins_novos.py — Baixa automaticamente os boletins novos do MPT.
 
 Detecta e baixa apenas os boletins ainda não presentes localmente:
 1. Consulta o mês corrente no Portal da Transparência
-2. Compara com os boletins já baixados (hermes_mpt_kb/raw/boletins/)
+2. Compara com os boletins já baixados (KB_RAW_BOLETINS/)
 3. Baixa os novos (via baixar_boletim.py + cloudscraper)
 4. Extrai PDF→MD (extrair_md_boletins.py)
 5. Atualiza o catálogo SQLite (catalogar_atos.py)
@@ -23,15 +23,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-# ------------------------------------------------------------
-# Configuração
-# ------------------------------------------------------------
-OPS = Path("/opt/data/hermes-data/hermes_mpt_ops")
-SCRIPTS = OPS / "scripts"
-DATA_DIR = Path("/opt/data/hermes-data/hermes_mpt_kb")
-RAIZ_BOLETINS = DATA_DIR / "raw" / "boletins"     # PDFs (destino)
-DEST_MD = DATA_DIR / "boletins"                    # MDs (destino)
-PYTHON = OPS / ".venv-bol" / "bin" / "python"
+# Importa configuração centralizada de caminhos
+from ops_paths import OPS_PATH, KB_PATH, KB_RAW_BOLETINS, KB_BOLETINS, OPS_DATA, OPS_SCRIPTS
 
 MESES = {
     "JAN": "Janeiro", "FEV": "Fevereiro", "MAR": "Março", "ABR": "Abril",
@@ -43,7 +36,7 @@ MESES = {
 def listar_boletins_local(ano: str) -> set:
     """Retorna o conjunto de números de boletins já baixados localmente para o ano."""
     nums = set()
-    for p in RAIZ_BOLETINS.glob(f"BS-*-{ano}.pdf"):
+    for p in KB_RAW_BOLETINS.glob(f"BS-*-{ano}.pdf"):
         m = re.match(r"BS-([\d.]+)-", p.name)
         if m:
             nums.add(m.group(1))
@@ -54,7 +47,7 @@ def listar_boletins_portal(scraper_py, ano, mes):
     """Consulta o portal e retorna lista de {indice, numero, data}."""
     import cloudscraper
     import sys as _sys
-    _sys.path.insert(0, str(SCRIPTS))
+    _sys.path.insert(0, str(OPS_SCRIPTS))
     import baixar_boletim as bb
 
     scraper = cloudscraper.create_scraper()
@@ -123,12 +116,17 @@ def main():
         return 0
 
     # 4. Baixar os novos (via baixar_boletim.py --baixar <numero>)
+    # Usa o python do venv de boletins se existir, senão o python do sistema
+    python_bol = OPS_PATH / ".venv-bol" / "bin" / "python"
+    if not python_bol.exists():
+        python_bol = Path(sys.executable)
+    
     baixado = 0
     for b in novos:
         print(f"  ⬇️  Baixando BS {b['numero']}/{ano} ...")
         r = subprocess.run(
-            [str(PYTHON), str(SCRIPTS / "baixar_boletim.py"), ano, mes,
-             "--baixar", b["numero"], "--dir", str(RAIZ_BOLETINS)],
+            [str(python_bol), str(OPS_SCRIPTS / "baixar_boletim.py"), ano, mes,
+             "--baixar", b["numero"], "--dir", str(KB_RAW_BOLETINS)],
             capture_output=True, text=True, timeout=60)
         if "✅" in r.stdout or "✅" in r.stderr:
             baixado += 1
@@ -142,8 +140,8 @@ def main():
     # 5. Extrair PDF→MD
     print("\n📄 Extraindo PDF→MD ...")
     r = subprocess.run(
-        [str(PYTHON), str(SCRIPTS / "extrair_md_boletins.py"),
-         "--orig", str(RAIZ_BOLETINS), "--dest", str(DEST_MD)],
+        [str(python_bol), str(OPS_SCRIPTS / "extrair_md_boletins.py"),
+         "--orig", str(KB_RAW_BOLETINS), "--dest", str(KB_BOLETINS)],
         capture_output=True, text=True, timeout=300)
     print("  " + (r.stdout.strip()[-200:] if r.stdout.strip() else r.stderr[-200:]))
 
@@ -152,9 +150,9 @@ def main():
     #     então usa-se o exportar_atos_formatos.py para gerar o índice)
     print("\n🗂️  Regenerando índice CSV ...")
     r = subprocess.run(
-        [str(PYTHON), str(SCRIPTS / "exportar_atos_formatos.py"),
-         "--raiz", str(DEST_MD),
-         "--dest", str(OPS / "data" / "indices")],
+        [str(python_bol), str(OPS_SCRIPTS / "exportar_atos_formatos.py"),
+         "--raiz", str(KB_BOLETINS),
+         "--dest", str(OPS_DATA / "indices")],
         capture_output=True, text=True, timeout=300)
     saida = r.stdout.strip() if r.stdout.strip() else r.stderr[-200:]
     print("  " + "\n  ".join(saida.splitlines()[-4:]))

@@ -9,10 +9,12 @@ import sqlite3
 import re
 import sys
 import os
+from pathlib import Path
 
-OPS_PATH = os.environ.get('OPS_PATH', '/opt/data/hermes-data/hermes_mpt_ops')
-KB_PATH = os.environ.get('KB_PATH', '/opt/data/hermes-data/hermes_mpt_kb')
-DB_PATH = os.path.join(OPS_PATH, 'data', 'regional-orcamento.db')
+# Importa configuração centralizada de caminhos
+from ops_paths import OPS_PATH, KB_PATH, OPS_DATA
+
+DB_PATH = OPS_DATA / "regional-orcamento.db"
 
 def extrair_demandas(html_path):
     """Extrai demandas do arquivo HTML do SGA."""
@@ -141,10 +143,9 @@ def main():
             html_path = args[i + 1]
     
     if not html_path:
-        html_path = os.path.join(KB_PATH, 'raw', 'articles',
-                                 'demandas-orcamento-regional-2026-todas.html.md')
+        html_path = KB_PATH / 'raw' / 'articles' / 'demandas-orcamento-regional-2026-todas.html.md'
     
-    if not os.path.exists(html_path):
+    if not Path(html_path).exists():
         print(f"ERRO: Arquivo não encontrado: {html_path}")
         sys.exit(1)
     

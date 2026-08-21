@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""exportar_atos_formatos.py — Exporta o conteúdo da tabela atos_normativos
+"""
+exportar_atos_formatos.py — Exporta o conteúdo da tabela atos_normativos
 dos MDs planos de boletins em 4 formatos: .md, .csv, .tsv, .toml.
 
-Lê os MDs planos de hermes_mpt_kb/boletins/*.md (frontmatter com `data:` de
+Lê os MDs planos de KB_BOLETINS/*.md (frontmatter com `data:` de
 circulação), detecta cada ato com a MESMA lógica do catalogar_atos.py
 (função atos_por_arquivo) e escreve 4 arquivos com os MESMOS dados, cada um
 na sua própria estrutura:
@@ -26,6 +27,9 @@ import json
 import re
 import sys
 from pathlib import Path
+
+# Importa configuração centralizada de caminhos
+from ops_paths import KB_PATH, KB_BOLETINS, OPS_PATH
 
 # Mesa de mês (printf correto de acentos)
 MESES = {
@@ -67,13 +71,14 @@ def normalizar_data_ato(data: str | None) -> str | None:
 
 def coletar_atos(raiz: Path) -> list[dict]:
     """Varre os MDs planos em raiz/ e retorna a lista de atos detectados."""
-    sys.path.insert(0, str(raiz.parent.parent / "hermes_mpt_ops" / "scripts"))
+    # Importa catalogar_atos do OPS_PATH
+    sys.path.insert(0, str(OPS_PATH / "scripts"))
     try:
         import catalogar_atos as cat
     except ImportError:
         # fallback: caminho absoluto do repo
         import os
-        repo = os.environ.get("OPS_PATH", "/opt/data/hermes-data/hermes_mpt_ops")
+        repo = os.environ.get("OPS_PATH", str(OPS_PATH))
         sys.path.insert(0, repo + "/scripts")
         import catalogar_atos as cat
 
@@ -150,7 +155,7 @@ def escrever_toml(atos, path):
     partes = [
         "# Conteúdo da tabela atos_normativos (extraído dos MDs de boletins)",
         "",
-        "# Total: {total} atos",
+        f"# Total: {len(atos)} atos",
         "",
     ]
     for i, a in enumerate(atos):
@@ -166,7 +171,7 @@ def escrever_toml(atos, path):
 
 def main():
     ap = argparse.ArgumentParser(description="Exporta atos_normativos dos MDs em formatos")
-    ap.add_argument("--raiz", default="/opt/data/hermes-data/hermes_mpt_kb/boletins")
+    ap.add_argument("--raiz", default=str(KB_BOLETINS))
     ap.add_argument("--base", default="atos_normativos")
     ap.add_argument("--dest", required=True, help="Pasta de saída (obrigatório)")
     ap.add_argument("--formato", nargs="+", default=["csv"],

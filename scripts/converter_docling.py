@@ -5,14 +5,14 @@ converter_docling.py — Converte PDFs de boletins com Docling para markdown est
 Usa o Docling (IBM) para extrair a ESTRUTURA em árvore dos PDFs (headings,
 seções, tabelas, ordem de leitura) — diferentemente do PyMuPDF que achata.
 
-Saída por boletim (em hermes_mpt_kb/boletins_docling/):
+Saída por boletim (em KB_BOLETINS_DOCLING/):
     <nome>.md → markdown estruturado (export_to_markdown)
 
 Com paralelismo (multiprocessing) e opção de gerar também JSON (árvore).
 
 Uso:
     python3 converter_docling.py [--pdf BS-012-2025.pdf ...]
-    python3 converter_docling.py --todos         # todos os PDFs de raw/boletins
+    python3 converter_docling.py --todos         # todos os PDFs de KB_RAW_BOLETINS
     python3 converter_docling.py --todos --json  # inclui JSON lossless
     python3 converter_docling.py --todos --jobs 4  # paralelismo
 """
@@ -25,9 +25,8 @@ import sys
 import time
 from pathlib import Path
 
-# Import lazy (dentro do worker) para multiprocessing
-RAIZ_PDF = Path("/opt/data/hermes-data/hermes_mpt_kb/raw/boletins")
-DEST_DEFAULT = Path("/opt/data/hermes-data/hermes_mpt_kb/boletins_docling")
+# Importa configuração centralizada de caminhos
+from ops_paths import KB_RAW_BOLETINS, KB_BOLETINS_DOCLING
 
 
 def converter_um(pdf_path_str: str, dest_str: str, gerar_json: bool) -> tuple:
@@ -60,22 +59,22 @@ def converter_um(pdf_path_str: str, dest_str: str, gerar_json: bool) -> tuple:
 def main():
     ap = argparse.ArgumentParser(description="Converte boletins PDF com Docling para MD estruturado")
     ap.add_argument("--pdf", nargs="+", help="Nomes dos PDFs a converter")
-    ap.add_argument("--todos", action="store_true", help="Converte todos os PDFs de raw/boletins")
+    ap.add_argument("--todos", action="store_true", help="Converte todos os PDFs de KB_RAW_BOLETINS")
     ap.add_argument("--json", action="store_true", help="Também gera JSON lossless (árvore)")
-    ap.add_argument("--dest", default=str(DEST_DEFAULT), help="Pasta de saída")
+    ap.add_argument("--dest", default=str(KB_BOLETINS_DOCLING), help="Pasta de saída")
     ap.add_argument("--jobs", type=int, default=1, help="Nº de processos paralelos (default: 1)")
     args = ap.parse_args()
 
     if args.todos:
-        pdfs = sorted(RAIZ_PDF.glob("*.pdf"))
+        pdfs = sorted(KB_RAW_BOLETINS.glob("*.pdf"))
     elif args.pdf:
         # aceita nome com ou sem extensão .pdf
         pdfs = []
         for p in args.pdf:
             base = p if p.endswith(".pdf") else f"{p}.pdf"
-            pdfs.append(RAIZ_PDF / base)
+            pdfs.append(KB_RAW_BOLETINS / base)
     else:
-        pdfs = [RAIZ_PDF / p for p in
+        pdfs = [KB_RAW_BOLETINS / p for p in
                 ["BS-012-2025.pdf", "BS-144-2025.pdf", "BS-050-2025.pdf", "BS-145-2026.pdf"]]
 
     pdfs = [p for p in pdfs if p.exists()]

@@ -28,8 +28,8 @@ Engenharia por trás da base de conhecimento: scripts, bancos SQLite, sistema de
 
 | Repo | Conteúdo | Pasta |
 |------|----------|-------|
-| `hermes_mpt_kb` | Conhecimento (PGEAs, artigos, referências, processos) | `/opt/data/hermes-data/hermes_mpt_kb` |
-| `hermes_mpt_ops` | Engenharia (scripts, bancos, configs versionáveis) | `/opt/data/hermes-data/hermes_mpt_ops` |
+| `hermes_mpt_kb` | Conhecimento (PGEAs, artigos, referências, processos) | `KB_PATH` |
+| `hermes_mpt_ops` | Engenharia (scripts, bancos, configs versionáveis) | `OPS_PATH` |
 | `/workspace` (WebUI) | Balcão de entrada — trânsito temporário, **lavável** | `/opt/data/hermes-data/hermes-webui/workspace` (mesma pasta física vista pelo agent) |
 
 Regra de ouro: **documentos → KB; código/dados → OPS; segredos → em nenhum repo** (ficam na raiz de `hermes-data/`).
@@ -71,7 +71,7 @@ CLI completa (validada em uso): `add` (criar), `list` (ativas), `list --todas` (
 
 **Formato do `remind` (dashboard em tabela — desde ago/2026):** `## 📋 Pendências — N aguardando (X 🔴)` + tabela `| # | Prio | Tipo | Assunto |` (emoji 🔴🟡🟢, rótulo do tipo em PT, assunto truncado a 60 chars) + destaque `🔴 **N de prioridade alta** — veja primeiro` + chamada `➡️ Responda **"resolver pendências"**...`. Mapa `PRIO_EMOJI`/`TIPO_LABEL` vive no topo do `pendencia.py` — extensível se surgir tipo novo.
 
-Banco: `/opt/data/hermes-data/hermes_mpt_ops/data/pendencias.db` (versionado).
+Banco: `OPS_DATA / "pendencias.db"` (versionado).
 Documentação: `hermes_mpt_kb/referencias/sistema-pendencias.md`.
 
 ## Pipeline PDF → Wiki
@@ -79,10 +79,10 @@ Documentação: `hermes_mpt_kb/referencias/sistema-pendencias.md`.
 Converter 1 PDF por vez:
 
 ```bash
-cd /opt/data/hermes-data/hermes_mpt_kb && .venv/bin/python3 scripts/pdf2kb.py <arquivo.pdf>
+cd KB_PATH && .venv/bin/python3 scripts/pdf2kb.py <arquivo.pdf>
 ```
 
-(via symlink local no KB; o script real vive em `hermes_mpt_ops/scripts/pdf2kb.py` — renomeado de `pdf2wiki.py` na migração de nomes neutros ago/2026)
+(via symlink local no KB; o script real vive em `OPS_PATH/scripts/pdf2kb.py` — renomeado de `pdf2wiki.py` na migração de nomes neutros ago/2026)
 
 Gera `raw/articles/<slug>/` (KB é vault Obsidian na raiz — **não existe subpasta `wiki/`**; o caminho antigo `wiki/raw/articles/` está obsoleto desde a migração) com `artigo.md` + `assets/` + `fonte.pdf` + `indexacao.json`.
 **Sempre** apresentar o `indexacao.json` ao usuário (via pendência de confirmação) ANTES de indexar e enriquecer o frontmatter.
@@ -103,8 +103,8 @@ O campo `script` de cron job exige:
 - **SEM argumentos** (ex: `pendencia.py remind` → `Script not found`)
 
 Padrão correto: **wrapper real** em `~/.hermes/scripts/` que executa o código versionado no OPS:
-- bash: `exec /opt/data/hermes-data/hermes_mpt_ops/scripts/script.sh "$@"`
-- python: `runpy.run_path("/opt/data/.../script.py", run_name="__main__")`
+- bash: `exec OPS_PATH/scripts/script.sh "$@"`
+- python: `runpy.run_path("OPS_PATH/scripts/script.py", run_name="__main__")`
 - argumento fixo (ex: remind) → wrapper dedicado que seta `sys.argv` antes do `runpy`
 
 Modelos prontos: `references/cron-wrapper-pattern.md`.
@@ -191,7 +191,7 @@ caminhos ajustados, (5) token Google via `setup.py --auth-url/--auth-code`,
 - **write_file segue symlink e sobrescreve o arquivo REAL**: se o destino é symlink para código versionado, write_file grava POR DENTRO do symlink (clobber). Conferir com `ls -la` antes de escrever; para destinos suspeitos, escrever em `/opt/data/` e `cp` via terminal.
 - **Env vars antigas viciadas**: `KB_PATH=/opt/data/wiki` (pré-migração) sobrescrevia o default do script de auto-commit. Usar caminhos absolutos fixos nos scripts, não `${VAR:-default}` quando o env pode estar obsoleto.
 - **Repo novo precisa de identidade git**: `git config user.name "Aloisio Spadeto"` e `user.email aspadeto@gmail.com` (local) antes do primeiro commit — senão `Author identity unknown`.
-- **Auto-commit cobre os DOIS repos**: `hermes_mpt_ops/scripts/kb-auto-commit.sh` (renomeado de `wiki-auto-commit.sh` na migração) itera KB + OPS; tratar repo sem remote (commit local apenas).
+Auto-commit cobre os DOIS repos: `OPS_PATH/scripts/kb-auto-commit.sh` (renomeado de `wiki-auto-commit.sh` na migração) itera KB + OPS; tratar repo sem remote (commit local apenas).
 - **Auto-commit race no OPS também**: o sync de 10min commita alterações do OPS (ex: `regional-orcamento.db` novo, edições em scripts) antes do commit manual — `git commit` manual pode acusar "nothing to commit" ou pouquíssimas linhas; verificar com `git log --oneline -3` antes de supor erro.
 - **Banco de dados versionado**: `pendencias.db` é exceção no `.gitignore` do KB via `!data/...` — migrou para OPS; demais `*.db` seguem ignorados até decisão.
 - **`HERMES_WORKSPACE` é variável de override do template**, não do sistema: no

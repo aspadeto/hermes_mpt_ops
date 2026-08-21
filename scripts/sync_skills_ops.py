@@ -4,7 +4,7 @@ sync_skills_ops.py — Sincroniza as skills do Hermes (~/.hermes/skills) para
 a pasta skills/ do repositório hermes_mpt_ops (versionamento no git).
 
 O ~/.hermes/skills NÃO é versionado em git. Este script copia as skills
-LOCAIS (criadas/atualizadas pelo usuário/agente) para hermes_mpt_ops/skills/,
+LOCAIS (criadas/atualizadas pelo usuário/agente) para OPS_PATH/skills/,
 onde participam do controle de versão e do auto-commit.
 
 O que é copiado por skill:
@@ -27,9 +27,11 @@ import shutil
 import sys
 from pathlib import Path
 
+# Importa configuração centralizada de caminhos
+from ops_paths import OPS_PATH, OPS_SKILLS
+
 SKILLS_SRC = Path.home() / ".hermes" / "skills"
-OPS_ROOT = Path("/opt/data/hermes-data/hermes_mpt_ops")
-SKILLS_DEST = OPS_ROOT / "skills"
+SKILLS_DEST = OPS_SKILLS
 
 # ------------------------------------------------------------------
 # Skills customizadas do ambiente MPT/DR que devem ser versionadas.

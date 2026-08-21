@@ -1,23 +1,23 @@
 # Extração PDF→MD de boletins (pipeline flat)
 
 Técnica validada em ago/2026 (lote de 508 boletins). Converte os PDFs de
-`hermes_mpt_kb/raw/boletins/` em Markdown plano em `hermes_mpt_kb/boletins/`.
+`KB_RAW_BOLETINS/` em Markdown plano em `KB_BOLETINS/`.
 
 ## Script
 
-`hermes_mpt_ops/scripts/extrair_md_boletins.py` — fez **porque** o `pdf2kb.py`
+`OPS_PATH/scripts/extrair_md_boletins.py` — fez **porque** o `pdf2kb.py`
 gera estrutura `raw/articles/<slug>/` com assets para artigos; boletins precisam
 de saída plana, um arquivo por boletim. Dependência: PyMuPDF, venv
-`hermes_mpt_ops/.venv-bol` (o mesmo usado pelo `baixar_boletim.py`).
+`OPS_PATH/.venv-bol` (o mesmo usado pelo `baixar_boletim.py`).
 
 ```bash
-cd /opt/data/hermes-data/hermes_mpt_ops
+cd OPS_PATH
 .venv-bol/bin/python scripts/extrair_md_boletins.py \
-  --orig hermes_mpt_kb/raw/boletins --dest hermes_mpt_kb/boletins \
+  --orig KB_RAW_BOLETINS --dest KB_BOLETINS \
   [--filtro glob]    # default *.pdf; use para testar 1 arquivo antes do lote
 ```
 
-Argumentos: `--orig` (default `KB/raw/boletins`), `--dest` (default `KB/boletins`),
+Argumentos: `--orig` (default `KB_RAW_BOLETINS`), `--dest` (default `KB_BOLETINS`),
 `--filtro` (default `*.pdf`).
 
 ## Formato de saída (fiel ao histórico da base)
@@ -70,8 +70,8 @@ cabeçalho "BOLETIM EXTRAORDINÁRIO"); a data só aparece a partir da página 2 
 
 ## Estrutura de destino (preferência do usuário)
 
-- **PDFs**: `hermes_mpt_kb/raw/boletins/` (canônico, plano — 508 em ago/2026)
-- **MDs**: `hermes_mpt_kb/boletins/` **PLANOS na raiz, SEM subcarpetas por mês**
+- **PDFs**: `KB_RAW_BOLETINS/` (canônico, plano — 508 em ago/2026)
+- **MDs**: `KB_BOLETINS/` **PLANOS na raiz, SEM subcarpetas por mês**
 
 O usuário prefere SEM subpasta por mês porque os boletins já são numerados
 (`BS-NNN-AAAA` é único) — subpasta por mês torna difícil achar um boletim
