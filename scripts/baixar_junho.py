@@ -9,8 +9,8 @@ NUMEROS = ["103", "103.1", "104", "105", "106", "107", "108", "108.1", "108.2",
            "109", "110", "111", "112", "112.1", "113", "114", "115", "116",
            "117", "117.1", "118"]
 DIR = Path("/opt/data/hermes-data/boletins_tmp_jun")
-SCRIPT = "/opt/data/hermes-data/hermes_mpt_ops/scripts/baixar_boletim.py"
-PY = "/opt/data/hermes-data/hermes_mpt_ops/.venv-bol/bin/python"
+SCRIPT = "/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/baixar_boletim.py"
+PY = "/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/.venv-bol/bin/python"
 
 DIR.mkdir(parents=True, exist_ok=True)
 
