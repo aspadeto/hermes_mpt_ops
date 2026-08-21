@@ -30,7 +30,7 @@ boletins do MPT (ago/2026): 5/5 acertos.
 # no .tool-venv (Python 3.12)
 uv pip install --python /opt/data/hermes-data/.tool-venv/bin/python docling
 # requer Python >= 3.10; baixa modelos de layout/OCR na primeira execução (centenas de MB)
-# CPU: ~124s/boletim, ~1.5GB RAM por processo. VM: 3 jobs paralelos (limite RAM)
+# CPU: ~124s/boletim, ~1.5GB RAM por processo. ⚠️ ANTI-OOM (21/08/2026): --jobs 3 ESTOURA RAM (11GB) e mata processo + WebUI — usar SEMPRE --jobs 1.
 ```
 
 ## Diretório de saída
@@ -47,13 +47,16 @@ uv pip install --python /opt/data/hermes-data/.tool-venv/bin/python docling
 ## Uso
 
 ```bash
-# Converter todos os boletins (paralelo 3 jobs, só MD)
+# Converter todos os boletins (SEQUENCIAL jobs=1 — anti-OOM, validado)
+export HERMES_DATA_ROOT=/opt/data/hermes-data
+export OPS_PATH=/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops
+export KB_PATH=/opt/data/hermes-data/mpt_workspace/hermes_mpt_kb
 /opt/data/hermes-data/.tool-venv/bin/python \
-  hermes_mpt_ops/scripts/converter_docling.py --todos --dest hermes_mpt_kb/boletins_docling --jobs 3
+  hermes_mpt_ops/scripts/converter_docling.py --todos --jobs 1
 
-# Converter PDFs específicos
+# Converter PDFs específicos (aceita nome com/sem .pdf)
 /opt/data/hermes-data/.tool-venv/bin/python \
-  hermes_mpt_ops/scripts/converter_docling.py --pdf BS-012-2025.pdf BS-144-2025.pdf --dest hermes_mpt_kb/boletins_docling
+  hermes_mpt_ops/scripts/converter_docling.py --pdf BS-012-2025 BS-144-2025 --jobs 1
 
 # Pesquisar (pergunta) — lê de boletins_docling/
 /opt/data/hermes-data/.tool-venv/bin/python \
@@ -87,7 +90,9 @@ o Docling faz via RapidOCR); fórmulas complexas podem degradar.
 - **`export_to_dict()` retorna dict** — serializar com `json.dumps(..., ensure_ascii=False)` antes de escrever.
 - **Primeira conversão baixa modelos** (layout/OCR) e demora mais.
 - **Conversão ~2-3min/PDF em CPU** (vs. PyMuPDF instantâneo) — usar seletivamente.
-- **RAM limitada:** usar `--jobs 3` em VM de 4.8GB (3 × ~1.5GB ≈ 4.5GB).
+- **RAM limitada — NUNCA `--jobs 3`:** a VM tem 11GB; 3 workers (~1.5-3GB cada) + sistema + WebUI estouram e o OOM killer mata o processo (às vezes derrubando o WebUI). **Sempre `--jobs 1`** (sequencial, ~2-3min/PDF). Validado em 21/08/2026 na conversão dos 512 boletins.
+- **Env vars viciadas criam pasta órfã na raiz:** `KB_PATH`/`OPS_PATH` podem estar setadas apontando para `/opt/data/hermes-data/hermes_mpt_kb` (raiz) em vez de `mpt_workspace/`. Como o `ops_paths.py` respeita as env vars (prioridade), o Docling grava na raiz errada. **Sintoma:** pasta `hermes_mpt_kb/` na raiz do hermes-data recriada. **Fix:** `export HERMES_DATA_ROOT=/opt/data/hermes-data`, `OPS_PATH=.../mpt_workspace/hermes_mpt_ops`, `KB_PATH=.../mpt_workspace/hermes_mpt_kb` antes de rodar.
+- **`--pdf` aceita nome com ou sem `.pdf`:** corrigido em 21/08 — antes, passar `BS-012-2025` (sem extensão) resultava em "0 PDFs convertidos" porque o script não acrescentava `.pdf`.
 - **Mesmo número de ato pode existir em várias regionais** (ex: várias "Nº 26") — buscar DENTRO da seção da regional alvo (`## PRT-18ª REGIÃO`).
 - **`Nº X` pode ser heading OU texto corrido** no output Docling — testar ambos.
 - Avisos `NNPACK: Unsupported hardware` são inofensivos (sem otimização, roda em CPU).
