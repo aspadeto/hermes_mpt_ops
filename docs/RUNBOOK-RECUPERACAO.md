@@ -56,12 +56,21 @@ export GITHUB_TOKEN=$(cat GITHUB_TOKEN.txt)  # ou cole o token
 mkdir -p /opt/data && cd /opt/data
 git clone https://github.com/aspadeto/hermes_mpt_ops.git
 git clone https://github.com/aspadeto/hermes_mpt_kb.git
-mv hermes_mpt_ops hermes-data && mv hermes_mpt_kb hermes-data/  # layout final: /opt/data/hermes-data/{hermes_mpt_ops,hermes_mpt_kb}
+mkdir -p /opt/data/hermes-data/mpt_workspace
+mv hermes_mpt_ops /opt/data/hermes-data/mpt_workspace/ && mv hermes_mpt_kb /opt/data/hermes-data/mpt_workspace/
 ```
 
-> Layout de referência: `/opt/data/hermes-data/` contém `hermes_mpt_kb/`,
-> `hermes_mpt_ops/`, `hermes-webui/workspace/` (balcão da WebUI), `.tool-venv/`,
-> `.google-venv/`.
+> **Layout de referência (desde a migração de paths de ago/2026):** os dois repositórios
+> vivem em `/opt/data/hermes-data/mpt_workspace/`:
+> - `/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops` (engenharia)
+> - `/opt/data/hermes-data/mpt_workspace/hermes_mpt_kb` (conhecimento)
+>
+> ⚠️ O layout antigo (repos direto em `/opt/data/hermes-data/`) foi **removido**.
+> Scripts, symlinks, wrappers de cron e skills que referenciem
+> `/opt/data/hermes-data/hermes_mpt_ops`/`hermes_mpt_kb` (sem `mpt_workspace`) estão
+> **quebrados** e devem ser corrigidos — ver "Paths e auto-commit" na Fase 7.
+> Demais conteúdo de `hermes-data/`: `hermes-webui/workspace/` (balcão da WebUI),
+> `.tool-venv/`, `.google-venv/`.
 
 ```bash
 # 2.3 Credencial git (push automático do cron)
@@ -137,10 +146,10 @@ chmod 600 ~/.hermes/.env
 # 5.1 Gateway (user service — Telegram + API)
 systemctl --user enable --now hermes-gateway.service
 
-# 5.2 WebUI (daemon próprio do hermes-webui)
-cd ~/hermes-webui && ./ctl.sh start
+# 5.2 WebUI (user service systemd — porta 8787, só localhost)
+systemctl --user enable --now hermes-webui.service
 
-# 5.3 Dashboard (user service — novo Web UI SPA, porta 9119)
+# 5.3 Dashboard (user service systemd — novo Web UI SPA, porta 9119)
 systemctl --user enable --now hermes-dashboard.service
 
 # 5.4 Túnel Cloudflare (serviço de sistema, root)
@@ -153,7 +162,7 @@ sudo systemctl enable --now cloudflared
 
 # Verificar
 systemctl --user status hermes-gateway.service
-~/hermes-webui/ctl.sh status
+systemctl --user status hermes-webui.service
 systemctl --user status hermes-dashboard.service
 curl -s http://127.0.0.1:8787 -o /dev/null -w "%{http_code}"   # espera 302 (login)
 curl -s http://127.0.0.1:9119 -o /dev/null -w "%{http_code}"   # espera 200
@@ -187,11 +196,27 @@ curl -s https://dashboard-01.asideia.net -o /dev/null -w "%{http_code}"
 | Dashboard remoto | `curl -s https://dashboard-01.asideia.net` | login (Access) |
 | Telegram | enviar mensagem ao bot | responde |
 | API | `curl -s http://127.0.0.1:20241/` | responde (404 genérico = vivo) |
-| Backup | rodar `hermes_mpt_ops/scripts/hermes-backup.py` | upload OK |
+| Backup | rodar `/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/hermes-backup.py` | upload OK |
 | Pendências | `pendencia.py stats` | mostra banco |
-| Repos | `git -C /opt/data/hermes-data/hermes_mpt_kb status` | limpo |
+| Repos | `git -C /opt/data/hermes-data/mpt_workspace/hermes_mpt_kb status` | limpo |
 | Cron | `hermes cron list` | jobs ativos |
-| Git push | `git -C /opt/data/hermes-data/hermes_mpt_ops ls-remote origin HEAD` | autentica |
+| Git push | `git -C /opt/data/hermes-data/mpt_workspace/hermes_mpt_ops ls-remote origin HEAD` | autentica |
+| Auto-commit | rodar `scripts/kb-auto-commit.sh` | commita+push dos 2 repos |
+
+> ⚠️ **Paths e auto-commit (migração de ago/2026):** todos os caminhos usam
+> `/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops` e `.../hermes_mpt_kb`.
+> - **Wrappers de cron** (`~/.hermes/scripts/`): usam a variável `OPS_SCRIPTS` no
+>   cabeçalho (`OPS_SCRIPTS="/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts"`)
+>   e executam via `runpy.run_path(f"{OPS_SCRIPTS}/script.py", ...)` — editar a
+>   variável uma vez se a path mudar.
+> - **`kb-auto-commit.sh`** define `HERMES_DATA`/`OPS_DIR`/`KB_DIR` no cabeçalho com
+>   fallback (`HERMES_DATA="${HERMES_DATA:-/opt/data/hermes-data}"`,
+>   `OPS_DIR="$HERMES_DATA/mpt_workspace/hermes_mpt_ops"`,
+>   `KB_DIR="$HERMES_DATA/mpt_workspace/hermes_mpt_kb"`). **Não remover o fallback**:
+>   sem ele o cron roda com variáveis vazias e o auto-commit falha silenciosamente
+>   (`fatal: not a git repository` + falso exit 0).
+> - **Symlinks de `hermes_mpt_kb/scripts/`** apontam para
+>   `/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts/` (não são versionados).
 
 ---
 
@@ -289,7 +314,7 @@ curl -s https://dashboard-01.asideia.net -o /dev/null -w "%{http_code}"
 |---------|-------|---------------|--------------|
 | GITHUB_TOKEN | `/home/hermes/GITHUB_TOKEN.txt` | ✅ | GitHub → Developer settings |
 | .git-credentials | `/home/hermes/.git-credentials` | ✅ | automático no push |
-| WEBUI_PASSWORD | `~/hermes-webui/.env` | ❌ (manual) | gerar nova + editar .env + `ctl.sh restart` |
+| WEBUI_PASSWORD | `~/hermes-webui/.env` | ❌ (manual) | gerar nova + editar .env + `systemctl --user restart hermes-webui` |
 | DASHBOARD_SESSION_TOKEN | `~/.hermes/.env` | ❌ (manual) | `secrets.token_urlsafe(48)` + restart dashboard |
 | dashboard.basic_auth.secret | `~/.hermes/config.yaml` | ❌ (manual) | `secrets.token_bytes(32)` + restart dashboard |
 | TELEGRAM_* | `~/.hermes/.env` | ✅ | BotFather → /newbot |
