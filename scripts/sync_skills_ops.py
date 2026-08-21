@@ -30,7 +30,7 @@ from pathlib import Path
 # Importa configuração centralizada de caminhos
 from ops_paths import OPS_PATH, OPS_SKILLS
 
-SKILLS_SRC = Path.home() / ".hermes" / "skills"
+SKILLS_SRC = Path("/home/hermes/.hermes/skills")
 SKILLS_DEST = OPS_SKILLS
 
 # ------------------------------------------------------------------
