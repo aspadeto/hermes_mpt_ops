@@ -188,6 +188,25 @@ caminhos ajustados, (5) token Google via `setup.py --auth-url/--auth-code`,
 
 ## Pitfalls
 
+- **Wrappers de cron que usam `runpy.run_path` precisam setar `sys.path` E forçar as envs**
+  (22/08/2026): o script OPS real (ex: `pendencia.py`) faz `from ops_paths import ...`.
+  Quando um wrapper em `~/.hermes/scripts/` o executa via `runpy.run_path`, o diretório
+  `scripts/` do OPS NÃO entra no `sys.path` → `ModuleNotFoundError: No module named 'ops_paths'`
+  (sintoma: cron job com `last_status: error`, pendências nunca lembradas). Correção no wrapper:
+  ```python
+  import os, sys
+  os.environ["OPS_PATH"] = "/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops"  # defesa contra env viciada
+  os.environ["KB_PATH"] = "/opt/data/hermes-data/mpt_workspace/hermes_mpt_kb"
+  OPS_SCRIPTS = "/opt/data/hermes-data/mpt_workspace/hermes_mpt_ops/scripts"
+  sys.path.insert(0, OPS_SCRIPTS)
+  ```
+  Verificar com `env -i HOME=/home/hermes ... python <wrapper>` (simula o cron sem env herdada).
+- **Env vars `OPS_PATH`/`KB_PATH` viciadas podem estar no `.bashrc` do HOME efetivo**
+  (`/home/hermes/.hermes/home/.bashrc`, pois `HOME=/home/hermes/.hermes/home`): apontavam para
+  `/opt/data/hermes-data/hermes_mpt_ops` (sem `mpt_workspace`), fazendo scripts rodados VIA TERMINAL
+  usarem bancos órfãos. O gateway/cron usa `HOME=/home/hermes` (default do ops_paths, correto), mas
+  o terminal do agente herda o `.bashrc` viciado. Checar `env | grep OPS_PATH` e `grep -n OPS_PATH ~/.bashrc`.
+  Pode criar pastas órfãs vazias (`/opt/data/hermes-data/hermes_mpt_*`) pelo `mkdir` do `ops_paths.py` no import.
 - **write_file segue symlink e sobrescreve o arquivo REAL**: se o destino é symlink para código versionado, write_file grava POR DENTRO do symlink (clobber). Conferir com `ls -la` antes de escrever; para destinos suspeitos, escrever em `/opt/data/` e `cp` via terminal.
 - **Env vars antigas viciadas**: `KB_PATH=/opt/data/wiki` (pré-migração) sobrescrevia o default do script de auto-commit. Usar caminhos absolutos fixos nos scripts, não `${VAR:-default}` quando o env pode estar obsoleto. O `kb-auto-commit.sh` define `HERMES_DATA`/`OPS_DIR`/`KB_DIR` no cabeçalho **com fallback** (`HERMES_DATA="${HERMES_DATA:-/opt/data/hermes-data}"`, `OPS_DIR="$HERMES_DATA/mpt_workspace/hermes_mpt_ops"`, `KB_DIR="$HERMES_DATA/mpt_workspace/hermes_mpt_kb"`) — não remover o fallback, senão o cron roda com variáveis vazias e falha silenciosamente (`fatal: not a git repository` + falso exit 0).
 - **Repo novo precisa de identidade git**: `git config user.name "Aloisio Spadeto"` e `user.email aspadeto@gmail.com` (local) antes do primeiro commit — senão `Author identity unknown`.
