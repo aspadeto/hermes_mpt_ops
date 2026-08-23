@@ -14,6 +14,12 @@ Complementar ao [hermes_mpt_kb](https://github.com/aspadeto/hermes_mpt_kb) (conh
 
 > 📥 **Ingestão de documentos:** veja [docs/FLUXO-INGESTAO.md](docs/FLUXO-INGESTAO.md) —
 > caminho padrão do PDF → auditoria → KB/OPS (sem duplicação).
+>
+> 📊 **Boletins no KB (3 pastas, papéis definidos):** veja
+> [docs/BOLETINS-PAPEIS-E-ESTRATEGIA.md](docs/BOLETINS-PAPEIS-E-ESTRATEGIA.md) —
+> `raw/boletins/` (PDFs, fonte) · `boletins_docling/` (MD estruturado, referência) ·
+> `boletins/` (MD plano, legado em desuso). Estratégia: migrar consumidores até
+> descartar `boletins/`.
 
 ---
 
