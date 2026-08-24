@@ -361,3 +361,5 @@ Quando o usuário perguntar sobre gasto/uso de tokens, usar **`hermes insights`*
 - `references/ssh-host-access.md` — HISTÓRICO: acesso SSH container→host (obsoleto desde a migração p/ VM nativa)
 - `references/fluxo-completo-download-catalogo.md` — pipeline end-to-end: cloudscraper → PDF → PyMuPDF → MD → SQLite
 - `references/indexar-boletins-prt14.md` — indexador específico PRT14 (relevância 0/1/2, isolamento de sub-bloco)
+- `references/benchmark-boletins.md` — benchmark formal das ferramentas de pesquisa (4 scripts, 10 perguntas, ground truth)
+- `references/estrategia-boletins-pastas.md` — decisão #35: papéis das 3 pastas de boletins e estratégia de consolidação evolutiva
