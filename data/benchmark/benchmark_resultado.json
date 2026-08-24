@@ -1,182 +1,402 @@
 [
   {
     "ferramenta": "csv_factual",
-    "pergunta": "Q1",
+    "pergunta": "F1",
+    "tipo": "factual",
     "label": "Portaria 56/2025 - estrutura PRT10",
     "acerto": true,
     "resposta": "PORTARIA Nº 55/2025 - BS-012/2025 (2025-01-17) | DIRETOR-GERAL DO MINISTÉRIO PÚBLICO DO TRABALHO",
-    "tempo_ms": 120.8,
+    "tempo_ms": 121.9,
     "erro": false
   },
   {
     "ferramenta": "csv_factual",
-    "pergunta": "Q2",
-    "label": "Gratificação Chefe de Gabinete = CC-4",
-    "acerto": false,
-    "resposta": "PORTARIA Nº 55/2025 - BS-012/2025 (2025-01-17) | DIRETOR-GERAL DO MINISTÉRIO PÚBLICO DO TRABALHO",
-    "tempo_ms": 116.6,
-    "erro": false
-  },
-  {
-    "ferramenta": "csv_factual",
-    "pergunta": "Q3",
+    "pergunta": "F2",
+    "tipo": "factual",
     "label": "Comissão SPARKS - Portaria 1124/2025",
     "acerto": false,
     "resposta": "PORTARIA Nº 1718/2025 - BS-200/2025 (2025-10-23) | DIRETORA DE ADMINISTRAÇÃO DA PROCURADORIA-GERAL DO TRABALHO",
-    "tempo_ms": 102.9,
+    "tempo_ms": 109.1,
     "erro": false
   },
   {
     "ferramenta": "csv_factual",
-    "pergunta": "Q4",
-    "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
-    "acerto": false,
-    "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
-    "tempo_ms": 111.4,
-    "erro": false
-  },
-  {
-    "ferramenta": "csv_factual",
-    "pergunta": "Q5",
+    "pergunta": "F3",
+    "tipo": "factual",
     "label": "Designação ARIANNE - 26º Ofício PRT10",
     "acerto": true,
     "resposta": "PORTARIA Nº 233/2026 - BS-142/2026 (2026-08-05)",
-    "tempo_ms": 113.9,
+    "tempo_ms": 125.7,
+    "erro": false
+  },
+  {
+    "ferramenta": "csv_factual",
+    "pergunta": "F4",
+    "tipo": "factual",
+    "label": "Portaria 332/2025 - dispensa Ana Paula",
+    "acerto": true,
+    "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
+    "tempo_ms": 114.0,
+    "erro": false
+  },
+  {
+    "ferramenta": "csv_factual",
+    "pergunta": "F5",
+    "tipo": "factual",
+    "label": "Portaria 1/2026 PRT1 - BS-002",
+    "acerto": true,
+    "resposta": "PORTARIA Nº 1/2026 - BS-002/2026 (2026-01-06)",
+    "tempo_ms": 111.5,
+    "erro": false
+  },
+  {
+    "ferramenta": "csv_factual",
+    "pergunta": "C1",
+    "tipo": "conteudo",
+    "label": "Gratificação Chefe de Gabinete = CC-4",
+    "acerto": false,
+    "resposta": "PORTARIA Nº 55/2025 - BS-012/2025 (2025-01-17) | DIRETOR-GERAL DO MINISTÉRIO PÚBLICO DO TRABALHO",
+    "tempo_ms": 121.9,
+    "erro": false
+  },
+  {
+    "ferramenta": "csv_factual",
+    "pergunta": "C2",
+    "tipo": "conteudo",
+    "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
+    "acerto": false,
+    "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
+    "tempo_ms": 110.8,
+    "erro": false
+  },
+  {
+    "ferramenta": "csv_factual",
+    "pergunta": "C3",
+    "tipo": "conteudo",
+    "label": "Portaria 2152 anula 1564 (PGEA 20.02.0001)",
+    "acerto": true,
+    "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
+    "tempo_ms": 106.9,
+    "erro": false
+  },
+  {
+    "ferramenta": "csv_factual",
+    "pergunta": "C4",
+    "tipo": "conteudo",
+    "label": "Portaria 332 - dispensa Ana Paula",
+    "acerto": false,
+    "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
+    "tempo_ms": 103.3,
+    "erro": false
+  },
+  {
+    "ferramenta": "csv_factual",
+    "pergunta": "C5",
+    "tipo": "conteudo",
+    "label": "Portaria 13 - designa Daniel 58º Ofício",
+    "acerto": false,
+    "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
+    "tempo_ms": 105.3,
     "erro": false
   },
   {
     "ferramenta": "fulltext_docling",
-    "pergunta": "Q1",
+    "pergunta": "F1",
+    "tipo": "factual",
     "label": "Portaria 56/2025 - estrutura PRT10",
     "acerto": false,
     "resposta": "Encontrado em BS-179-2025.md: Nº ? — erimento fundamentado e respectiva análise pela Junta Médica Oficial da Procuradoria-Geral do Trabalho - JMO/PGT, observada a comunicação de qualquer ",
-    "tempo_ms": 4029.9,
+    "tempo_ms": 4025.3,
     "erro": false
   },
   {
     "ferramenta": "fulltext_docling",
-    "pergunta": "Q2",
-    "label": "Gratificação Chefe de Gabinete = CC-4",
-    "acerto": false,
-    "resposta": "Encontrado em BS-179-2025.md: Nº ? — volvidas. Publique-se em BS-Eletrônico. ## Nº 1492, DE 23 DE SETEMBRO DE 2025 ## ATOS DO PROCURADOR-GERAL ## GLÁUCIO ARAÚJO DE OLIVEIRA Altera a estru",
-    "tempo_ms": 4084.6,
-    "erro": false
-  },
-  {
-    "ferramenta": "fulltext_docling",
-    "pergunta": "Q3",
+    "pergunta": "F2",
+    "tipo": "factual",
     "label": "Comissão SPARKS - Portaria 1124/2025",
     "acerto": true,
     "resposta": "Encontrado em BS-144-2025.md: Nº 1124 — ## ANDERSON RÉGIS CAVALCANTE FEITOSA Diretor-Geral Adjunto Ministério Público do Trabalho Procuradoria-Geral ## ATOS DA DIRETORIA DE ADMINISTRAÇÃO Con",
-    "tempo_ms": 3828.3,
+    "tempo_ms": 3840.7,
     "erro": false
   },
   {
     "ferramenta": "fulltext_docling",
-    "pergunta": "Q4",
-    "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
-    "acerto": false,
-    "resposta": "Nenhum resultado encontrado no full-text docling.",
-    "tempo_ms": 3768.1,
-    "erro": false
-  },
-  {
-    "ferramenta": "fulltext_docling",
-    "pergunta": "Q5",
+    "pergunta": "F3",
+    "tipo": "factual",
     "label": "Designação ARIANNE - 26º Ofício PRT10",
     "acerto": true,
     "resposta": "Encontrado em BS-142-2026.md: Nº 233 — Art. 1° Designar a Dra. ARIANNE CASTRO DE ARAÚJO MIRANDA , Procuradora do Trabalho, titular do 21° Ofício Especializado da PRT 10ª Região/DF, para atu",
-    "tempo_ms": 3840.1,
+    "tempo_ms": 3851.1,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_docling",
+    "pergunta": "F4",
+    "tipo": "factual",
+    "label": "Portaria 332/2025 - dispensa Ana Paula",
+    "acerto": false,
+    "resposta": "Encontrado em BS-238-2024.md: Nº ? — os demais dados e informações constantes do PGEA nº 20.02.0001.0007457/2023-33, RESOLVO , em favor do Subprocurador Geral do Trabalho PEDRO LUIZ GONÇA",
+    "tempo_ms": 4129.9,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_docling",
+    "pergunta": "F5",
+    "tipo": "factual",
+    "label": "Portaria 1/2026 PRT1 - BS-002",
+    "acerto": false,
+    "resposta": "Nenhum resultado encontrado no full-text docling.",
+    "tempo_ms": 3997.5,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_docling",
+    "pergunta": "C1",
+    "tipo": "conteudo",
+    "label": "Gratificação Chefe de Gabinete = CC-4",
+    "acerto": false,
+    "resposta": "Encontrado em BS-179-2025.md: Nº ? — volvidas. Publique-se em BS-Eletrônico. ## Nº 1492, DE 23 DE SETEMBRO DE 2025 ## ATOS DO PROCURADOR-GERAL ## GLÁUCIO ARAÚJO DE OLIVEIRA Altera a estru",
+    "tempo_ms": 4097.4,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_docling",
+    "pergunta": "C2",
+    "tipo": "conteudo",
+    "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
+    "acerto": false,
+    "resposta": "Nenhum resultado encontrado no full-text docling.",
+    "tempo_ms": 3771.8,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_docling",
+    "pergunta": "C3",
+    "tipo": "conteudo",
+    "label": "Portaria 2152 anula 1564 (PGEA 20.02.0001)",
+    "acerto": false,
+    "resposta": "Encontrado em BS-210-2024.md: Nº ? — Portaria PGT nº 1187, de 02/08/2022, e considerando o disposto na Portaria PGT nº 1608, de 11/11/2021, bem como os dados e informações constantes do P",
+    "tempo_ms": 4004.3,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_docling",
+    "pergunta": "C4",
+    "tipo": "conteudo",
+    "label": "Portaria 332 - dispensa Ana Paula",
+    "acerto": false,
+    "resposta": "Nenhum resultado encontrado no full-text docling.",
+    "tempo_ms": 3988.6,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_docling",
+    "pergunta": "C5",
+    "tipo": "conteudo",
+    "label": "Portaria 13 - designa Daniel 58º Ofício",
+    "acerto": false,
+    "resposta": "Encontrado em BS-116-2025.md: Nº ? — GEA 20.02.0800.0000449/2025-39, RESOLVE: Art. 1° Designar o Procurador do Trabalho MARCO AURÉLIO GOMES CORDEIRO DA CUNHA , lotado no 2° Ofício Geral d",
+    "tempo_ms": 4037.0,
     "erro": false
   },
   {
     "ferramenta": "fulltext_plano",
-    "pergunta": "Q1",
+    "pergunta": "F1",
+    "tipo": "factual",
     "label": "Portaria 56/2025 - estrutura PRT10",
     "acerto": false,
     "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40142.8,
+    "tempo_ms": 40486.7,
     "erro": false
   },
   {
     "ferramenta": "fulltext_plano",
-    "pergunta": "Q2",
-    "label": "Gratificação Chefe de Gabinete = CC-4",
-    "acerto": false,
-    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40498.4,
-    "erro": false
-  },
-  {
-    "ferramenta": "fulltext_plano",
-    "pergunta": "Q3",
+    "pergunta": "F2",
+    "tipo": "factual",
     "label": "Comissão SPARKS - Portaria 1124/2025",
     "acerto": true,
     "resposta": "Encontrado em BS-144-2025.md: PORTARIAS \n \nNº 1124, DE 4 DE AGOSTO DE 2025 Constitui comissão de acompanhamento e execução do desfazimento e destruição de dispositivos elétricos incapacitantes (S",
-    "tempo_ms": 40486.2,
+    "tempo_ms": 40518.0,
     "erro": false
   },
   {
     "ferramenta": "fulltext_plano",
-    "pergunta": "Q4",
-    "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
-    "acerto": false,
-    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40151.8,
-    "erro": false
-  },
-  {
-    "ferramenta": "fulltext_plano",
-    "pergunta": "Q5",
+    "pergunta": "F3",
+    "tipo": "factual",
     "label": "Designação ARIANNE - 26º Ofício PRT10",
     "acerto": false,
     "resposta": "Encontrado em BS-036-2025.md: conforme preceitua a Resolução CSMPT n° 177, de 24 de setembro de 2020 . MARIA APARECIDA GUGEL LICENÇA-PRÊMIO DECISÃO Considerando o disposto no art. , inciso III e § °, da Lei Complementar n",
-    "tempo_ms": 40713.4,
+    "tempo_ms": 40736.7,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_plano",
+    "pergunta": "F4",
+    "tipo": "factual",
+    "label": "Portaria 332/2025 - dispensa Ana Paula",
+    "acerto": false,
+    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
+    "tempo_ms": 40671.7,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_plano",
+    "pergunta": "F5",
+    "tipo": "factual",
+    "label": "Portaria 1/2026 PRT1 - BS-002",
+    "acerto": false,
+    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
+    "tempo_ms": 40695.3,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_plano",
+    "pergunta": "C1",
+    "tipo": "conteudo",
+    "label": "Gratificação Chefe de Gabinete = CC-4",
+    "acerto": false,
+    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
+    "tempo_ms": 40684.9,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_plano",
+    "pergunta": "C2",
+    "tipo": "conteudo",
+    "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
+    "acerto": false,
+    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
+    "tempo_ms": 40961.5,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_plano",
+    "pergunta": "C3",
+    "tipo": "conteudo",
+    "label": "Portaria 2152 anula 1564 (PGEA 20.02.0001)",
+    "acerto": false,
+    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
+    "tempo_ms": 40664.6,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_plano",
+    "pergunta": "C4",
+    "tipo": "conteudo",
+    "label": "Portaria 332 - dispensa Ana Paula",
+    "acerto": false,
+    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
+    "tempo_ms": 40408.4,
+    "erro": false
+  },
+  {
+    "ferramenta": "fulltext_plano",
+    "pergunta": "C5",
+    "tipo": "conteudo",
+    "label": "Portaria 13 - designa Daniel 58º Ofício",
+    "acerto": false,
+    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
+    "tempo_ms": 40423.1,
     "erro": false
   },
   {
     "ferramenta": "docling_poc",
-    "pergunta": "Q1",
+    "pergunta": "F1",
+    "tipo": "factual",
     "label": "Portaria 56/2025 - estrutura PRT10",
     "acerto": true,
     "resposta": "Portaria Nº 56/2025 - Altera estrutura organizacional da PRT10, publicada no BS-012-2025 | Gratificação do Chefe de Gabinete: CC-4",
-    "tempo_ms": 29.3,
+    "tempo_ms": 29.9,
     "erro": false
   },
   {
     "ferramenta": "docling_poc",
-    "pergunta": "Q2",
-    "label": "Gratificação Chefe de Gabinete = CC-4",
-    "acerto": true,
-    "resposta": "Portaria Nº 56/2025 - Altera estrutura organizacional da PRT10, publicada no BS-012-2025 | Gratificação do Chefe de Gabinete: CC-4",
-    "tempo_ms": 31.5,
-    "erro": false
-  },
-  {
-    "ferramenta": "docling_poc",
-    "pergunta": "Q3",
+    "pergunta": "F2",
+    "tipo": "factual",
     "label": "Comissão SPARKS - Portaria 1124/2025",
     "acerto": true,
     "resposta": "Portaria Nº 1124/2025 - Constitui comissão SPARKS (BS-144-2025) | ",
-    "tempo_ms": 29.3,
+    "tempo_ms": 30.2,
     "erro": false
   },
   {
     "ferramenta": "docling_poc",
-    "pergunta": "Q4",
-    "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
-    "acerto": false,
-    "resposta": "Pesquisa no Docling: sem arquivo",
-    "tempo_ms": 31.3,
-    "erro": false
-  },
-  {
-    "ferramenta": "docling_poc",
-    "pergunta": "Q5",
+    "pergunta": "F3",
+    "tipo": "factual",
     "label": "Designação ARIANNE - 26º Ofício PRT10",
     "acerto": false,
     "resposta": "Portaria PRT10 Nº 240/2026 (BS-145-2026) - Art. 4º designa ARIANNE CASTRO DE ARAÚJO MIRANDA para o 26° Ofício Geral da PRT10",
-    "tempo_ms": 29.2,
+    "tempo_ms": 29.0,
+    "erro": false
+  },
+  {
+    "ferramenta": "docling_poc",
+    "pergunta": "F4",
+    "tipo": "factual",
+    "label": "Portaria 332/2025 - dispensa Ana Paula",
+    "acerto": false,
+    "resposta": "Pesquisa no Docling: sem arquivo",
+    "tempo_ms": 31.0,
+    "erro": false
+  },
+  {
+    "ferramenta": "docling_poc",
+    "pergunta": "F5",
+    "tipo": "factual",
+    "label": "Portaria 1/2026 PRT1 - BS-002",
+    "acerto": false,
+    "resposta": "Pesquisa no Docling: sem arquivo",
+    "tempo_ms": 284.1,
+    "erro": false
+  },
+  {
+    "ferramenta": "docling_poc",
+    "pergunta": "C1",
+    "tipo": "conteudo",
+    "label": "Gratificação Chefe de Gabinete = CC-4",
+    "acerto": true,
+    "resposta": "Portaria Nº 56/2025 - Altera estrutura organizacional da PRT10, publicada no BS-012-2025 | Gratificação do Chefe de Gabinete: CC-4",
+    "tempo_ms": 30.2,
+    "erro": false
+  },
+  {
+    "ferramenta": "docling_poc",
+    "pergunta": "C2",
+    "tipo": "conteudo",
+    "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
+    "acerto": false,
+    "resposta": "Pesquisa no Docling: sem arquivo",
+    "tempo_ms": 31.1,
+    "erro": false
+  },
+  {
+    "ferramenta": "docling_poc",
+    "pergunta": "C3",
+    "tipo": "conteudo",
+    "label": "Portaria 2152 anula 1564 (PGEA 20.02.0001)",
+    "acerto": false,
+    "resposta": "Pesquisa no Docling: sem arquivo",
+    "tempo_ms": 30.4,
+    "erro": false
+  },
+  {
+    "ferramenta": "docling_poc",
+    "pergunta": "C4",
+    "tipo": "conteudo",
+    "label": "Portaria 332 - dispensa Ana Paula",
+    "acerto": false,
+    "resposta": "Pesquisa no Docling: sem arquivo",
+    "tempo_ms": 30.3,
+    "erro": false
+  },
+  {
+    "ferramenta": "docling_poc",
+    "pergunta": "C5",
+    "tipo": "conteudo",
+    "label": "Portaria 13 - designa Daniel 58º Ofício",
+    "acerto": false,
+    "resposta": "Pesquisa no Docling: sem arquivo",
+    "tempo_ms": 30.5,
     "erro": false
   }
 ]

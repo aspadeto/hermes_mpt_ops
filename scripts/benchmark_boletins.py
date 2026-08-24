@@ -140,7 +140,12 @@ def rodar_ferramenta(script: str, pergunta: str) -> dict:
 def avaliar(q: dict, resposta: str) -> tuple[bool, list[str]]:
     r_upper = resposta.upper()
     encontrados = [t for t in q["expected"] if t.upper() in r_upper]
-    acerto = bool(q["boletim_esperado"] in r_upper) and bool(encontrados)
+    if q["boletim_esperado"] and q["boletim_esperado"] not in r_upper:
+        return False, encontrados
+    termos_curtos = [t for t in q["expected"] if t.isdigit() and len(t) <= 3]
+    if termos_curtos and not any(t in r_upper for t in termos_curtos):
+        return False, encontrados
+    acerto = bool(encontrados)
     return acerto, encontrados
 
 
