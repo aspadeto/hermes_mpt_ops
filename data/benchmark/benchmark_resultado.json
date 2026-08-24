@@ -6,7 +6,7 @@
     "label": "Portaria 56/2025 - estrutura PRT10",
     "acerto": true,
     "resposta": "PORTARIA Nº 55/2025 - BS-012/2025 (2025-01-17) | DIRETOR-GERAL DO MINISTÉRIO PÚBLICO DO TRABALHO",
-    "tempo_ms": 121.9,
+    "tempo_ms": 117.1,
     "erro": false
   },
   {
@@ -16,47 +16,47 @@
     "label": "Comissão SPARKS - Portaria 1124/2025",
     "acerto": false,
     "resposta": "PORTARIA Nº 1718/2025 - BS-200/2025 (2025-10-23) | DIRETORA DE ADMINISTRAÇÃO DA PROCURADORIA-GERAL DO TRABALHO",
-    "tempo_ms": 109.1,
+    "tempo_ms": 106.2,
     "erro": false
   },
   {
     "ferramenta": "csv_factual",
     "pergunta": "F3",
     "tipo": "factual",
-    "label": "Designação ARIANNE - 26º Ofício PRT10",
+    "label": "Designação ARIANNE - Portaria 231/2026 BS-142",
     "acerto": true,
     "resposta": "PORTARIA Nº 233/2026 - BS-142/2026 (2026-08-05)",
-    "tempo_ms": 125.7,
+    "tempo_ms": 111.1,
     "erro": false
   },
   {
     "ferramenta": "csv_factual",
     "pergunta": "F4",
     "tipo": "factual",
-    "label": "Portaria 332/2025 - dispensa Ana Paula",
-    "acerto": true,
+    "label": "Portaria 332/2025 - dispensa Ana Paula PRT14",
+    "acerto": false,
     "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
-    "tempo_ms": 114.0,
+    "tempo_ms": 111.6,
     "erro": false
   },
   {
     "ferramenta": "csv_factual",
     "pergunta": "F5",
     "tipo": "factual",
-    "label": "Portaria 1/2026 PRT1 - BS-002",
-    "acerto": true,
-    "resposta": "PORTARIA Nº 1/2026 - BS-002/2026 (2026-01-06)",
-    "tempo_ms": 111.5,
+    "label": "BSE 47/2026 - dispensa Fernanda Furlaneto CONAP PRT16",
+    "acerto": false,
+    "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
+    "tempo_ms": 113.0,
     "erro": false
   },
   {
     "ferramenta": "csv_factual",
     "pergunta": "C1",
     "tipo": "conteudo",
-    "label": "Gratificação Chefe de Gabinete = CC-4",
-    "acerto": false,
-    "resposta": "PORTARIA Nº 55/2025 - BS-012/2025 (2025-01-17) | DIRETOR-GERAL DO MINISTÉRIO PÚBLICO DO TRABALHO",
-    "tempo_ms": 121.9,
+    "label": "Portaria 400/2026 PGT - fiscalização Ata Registro Preços",
+    "acerto": true,
+    "resposta": "PORTARIA Nº 400/2026 - BS-048/2026 (2026-03-09) | DIRETORA DE ADMINISTRAÇÃO DA PROCURADORIA-GERAL DO TRABALHO",
+    "tempo_ms": 107.3,
     "erro": false
   },
   {
@@ -66,7 +66,7 @@
     "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
     "acerto": false,
     "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
-    "tempo_ms": 110.8,
+    "tempo_ms": 108.9,
     "erro": false
   },
   {
@@ -76,27 +76,27 @@
     "label": "Portaria 2152 anula 1564 (PGEA 20.02.0001)",
     "acerto": true,
     "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
-    "tempo_ms": 106.9,
+    "tempo_ms": 104.3,
     "erro": false
   },
   {
     "ferramenta": "csv_factual",
     "pergunta": "C4",
     "tipo": "conteudo",
-    "label": "Portaria 332 - dispensa Ana Paula",
+    "label": "Funcionamento PRT16 20/12/2024 e 06/01/2025 - regime plantão",
     "acerto": false,
-    "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
-    "tempo_ms": 103.3,
+    "resposta": "EDITAL Nº 12/2024 - BS-211/2024 (2024-11-05)",
+    "tempo_ms": 101.8,
     "erro": false
   },
   {
     "ferramenta": "csv_factual",
     "pergunta": "C5",
     "tipo": "conteudo",
-    "label": "Portaria 13 - designa Daniel 58º Ofício",
-    "acerto": false,
-    "resposta": "PORTARIA Nº 2152/2025 - BS-001/2026 (2026-01-05) | PROCURADOR-GERAL DO TRABALHO",
-    "tempo_ms": 105.3,
+    "label": "Edital 37/2025 PRT8 - redistribuição CC-02 Analista MPU",
+    "acerto": true,
+    "resposta": "EDITAL Nº 37/2025 - BS-077/2025 (2025-04-28) | PROCURADOR-GERAL DO TRABALHO",
+    "tempo_ms": 113.2,
     "erro": false
   },
   {
@@ -105,8 +105,8 @@
     "tipo": "factual",
     "label": "Portaria 56/2025 - estrutura PRT10",
     "acerto": false,
-    "resposta": "Encontrado em BS-179-2025.md: Nº ? — erimento fundamentado e respectiva análise pela Junta Médica Oficial da Procuradoria-Geral do Trabalho - JMO/PGT, observada a comunicação de qualquer ",
-    "tempo_ms": 4025.3,
+    "resposta": "Encontrado em BS-179-2025.md: Nº ? — volvidas. Publique-se em BS-Eletrônico. ## Nº 1492, DE 23 DE SETEMBRO DE 2025 ## ATOS DO PROCURADOR-GERAL ## GLÁUCIO ARAÚJO DE OLIVEIRA Altera a estru",
+    "tempo_ms": 4052.1,
     "erro": false
   },
   {
@@ -116,47 +116,47 @@
     "label": "Comissão SPARKS - Portaria 1124/2025",
     "acerto": true,
     "resposta": "Encontrado em BS-144-2025.md: Nº 1124 — ## ANDERSON RÉGIS CAVALCANTE FEITOSA Diretor-Geral Adjunto Ministério Público do Trabalho Procuradoria-Geral ## ATOS DA DIRETORIA DE ADMINISTRAÇÃO Con",
-    "tempo_ms": 3840.7,
+    "tempo_ms": 3862.6,
     "erro": false
   },
   {
     "ferramenta": "fulltext_docling",
     "pergunta": "F3",
     "tipo": "factual",
-    "label": "Designação ARIANNE - 26º Ofício PRT10",
+    "label": "Designação ARIANNE - Portaria 231/2026 BS-142",
     "acerto": true,
     "resposta": "Encontrado em BS-142-2026.md: Nº 233 — Art. 1° Designar a Dra. ARIANNE CASTRO DE ARAÚJO MIRANDA , Procuradora do Trabalho, titular do 21° Ofício Especializado da PRT 10ª Região/DF, para atu",
-    "tempo_ms": 3851.1,
+    "tempo_ms": 3846.0,
     "erro": false
   },
   {
     "ferramenta": "fulltext_docling",
     "pergunta": "F4",
     "tipo": "factual",
-    "label": "Portaria 332/2025 - dispensa Ana Paula",
+    "label": "Portaria 332/2025 - dispensa Ana Paula PRT14",
     "acerto": false,
-    "resposta": "Encontrado em BS-238-2024.md: Nº ? — os demais dados e informações constantes do PGEA nº 20.02.0001.0007457/2023-33, RESOLVO , em favor do Subprocurador Geral do Trabalho PEDRO LUIZ GONÇA",
-    "tempo_ms": 4129.9,
+    "resposta": "Encontrado em BS-238-2024.md: Nº ? — <!-- image --> ## BOLETIM DE SERVIÇO ELETRÔNICO 238/2024 SEGUNDA-FEIRA, 16 DE DEZEMBRO DE 2024 <!-- image --> <!-- image --> ## MINISTÉRIO PÚBLICO DO ",
+    "tempo_ms": 4110.4,
     "erro": false
   },
   {
     "ferramenta": "fulltext_docling",
     "pergunta": "F5",
     "tipo": "factual",
-    "label": "Portaria 1/2026 PRT1 - BS-002",
+    "label": "BSE 47/2026 - dispensa Fernanda Furlaneto CONAP PRT16",
     "acerto": false,
-    "resposta": "Nenhum resultado encontrado no full-text docling.",
-    "tempo_ms": 3997.5,
+    "resposta": "Encontrado em BS-232-2024.md: Nº 75 — , e os dados e informações constantes do PGEA 20.02.0001.0010033/2024-27, RESOLVE: Art. 1º Designar excepcionalmente o Procurador do Trabalho AFONSO D",
+    "tempo_ms": 3843.7,
     "erro": false
   },
   {
     "ferramenta": "fulltext_docling",
     "pergunta": "C1",
     "tipo": "conteudo",
-    "label": "Gratificação Chefe de Gabinete = CC-4",
-    "acerto": false,
-    "resposta": "Encontrado em BS-179-2025.md: Nº ? — volvidas. Publique-se em BS-Eletrônico. ## Nº 1492, DE 23 DE SETEMBRO DE 2025 ## ATOS DO PROCURADOR-GERAL ## GLÁUCIO ARAÚJO DE OLIVEIRA Altera a estru",
-    "tempo_ms": 4097.4,
+    "label": "Portaria 400/2026 PGT - fiscalização Ata Registro Preços",
+    "acerto": true,
+    "resposta": "Encontrado em BS-048-2026.md: Nº 400 — ## TERESA CRISTINA AIRES DE ASSIS Designa fiscalização da execução da Ata de Registro de Preços nº 19/2024, firmada com a empresa MULTPAPER DISTRIBUID",
+    "tempo_ms": 3978.6,
     "erro": false
   },
   {
@@ -166,7 +166,7 @@
     "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
     "acerto": false,
     "resposta": "Nenhum resultado encontrado no full-text docling.",
-    "tempo_ms": 3771.8,
+    "tempo_ms": 3773.3,
     "erro": false
   },
   {
@@ -176,27 +176,27 @@
     "label": "Portaria 2152 anula 1564 (PGEA 20.02.0001)",
     "acerto": false,
     "resposta": "Encontrado em BS-210-2024.md: Nº ? — Portaria PGT nº 1187, de 02/08/2022, e considerando o disposto na Portaria PGT nº 1608, de 11/11/2021, bem como os dados e informações constantes do P",
-    "tempo_ms": 4004.3,
+    "tempo_ms": 4001.0,
     "erro": false
   },
   {
     "ferramenta": "fulltext_docling",
     "pergunta": "C4",
     "tipo": "conteudo",
-    "label": "Portaria 332 - dispensa Ana Paula",
+    "label": "Funcionamento PRT16 20/12/2024 e 06/01/2025 - regime plantão",
     "acerto": false,
-    "resposta": "Nenhum resultado encontrado no full-text docling.",
-    "tempo_ms": 3988.6,
+    "resposta": "Encontrado em BS-179-2025.md: Nº ? — image --> ## BOLETIM DE SERVIÇO ELETRÔNICO 179/2025 QUARTA-FEIRA, 24 DE SETEMBRO DE 2025 <!-- image --> <!-- image --> ## MINISTÉRIO PÚBLICO DO TRABAL",
+    "tempo_ms": 4090.1,
     "erro": false
   },
   {
     "ferramenta": "fulltext_docling",
     "pergunta": "C5",
     "tipo": "conteudo",
-    "label": "Portaria 13 - designa Daniel 58º Ofício",
+    "label": "Edital 37/2025 PRT8 - redistribuição CC-02 Analista MPU",
     "acerto": false,
-    "resposta": "Encontrado em BS-116-2025.md: Nº ? — GEA 20.02.0800.0000449/2025-39, RESOLVE: Art. 1° Designar o Procurador do Trabalho MARCO AURÉLIO GOMES CORDEIRO DA CUNHA , lotado no 2° Ofício Geral d",
-    "tempo_ms": 4037.0,
+    "resposta": "Encontrado em BS-238-2024.md: Nº ? — 00.0002008/2024-23 mediante requerimento dirigido ao Procurador-Geral do Trabalho, no prazo de 48 (quarenta e oito)horas a contar da publicação deste ",
+    "tempo_ms": 4026.2,
     "erro": false
   },
   {
@@ -206,7 +206,7 @@
     "label": "Portaria 56/2025 - estrutura PRT10",
     "acerto": false,
     "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40486.7,
+    "tempo_ms": 40461.3,
     "erro": false
   },
   {
@@ -216,47 +216,47 @@
     "label": "Comissão SPARKS - Portaria 1124/2025",
     "acerto": true,
     "resposta": "Encontrado em BS-144-2025.md: PORTARIAS \n \nNº 1124, DE 4 DE AGOSTO DE 2025 Constitui comissão de acompanhamento e execução do desfazimento e destruição de dispositivos elétricos incapacitantes (S",
-    "tempo_ms": 40518.0,
+    "tempo_ms": 40509.9,
     "erro": false
   },
   {
     "ferramenta": "fulltext_plano",
     "pergunta": "F3",
     "tipo": "factual",
-    "label": "Designação ARIANNE - 26º Ofício PRT10",
+    "label": "Designação ARIANNE - Portaria 231/2026 BS-142",
     "acerto": false,
     "resposta": "Encontrado em BS-036-2025.md: conforme preceitua a Resolução CSMPT n° 177, de 24 de setembro de 2020 . MARIA APARECIDA GUGEL LICENÇA-PRÊMIO DECISÃO Considerando o disposto no art. , inciso III e § °, da Lei Complementar n",
-    "tempo_ms": 40736.7,
+    "tempo_ms": 40619.1,
     "erro": false
   },
   {
     "ferramenta": "fulltext_plano",
     "pergunta": "F4",
     "tipo": "factual",
-    "label": "Portaria 332/2025 - dispensa Ana Paula",
+    "label": "Portaria 332/2025 - dispensa Ana Paula PRT14",
     "acerto": false,
     "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40671.7,
+    "tempo_ms": 40455.3,
     "erro": false
   },
   {
     "ferramenta": "fulltext_plano",
     "pergunta": "F5",
     "tipo": "factual",
-    "label": "Portaria 1/2026 PRT1 - BS-002",
+    "label": "BSE 47/2026 - dispensa Fernanda Furlaneto CONAP PRT16",
     "acerto": false,
-    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40695.3,
+    "resposta": "Encontrado em BS-232-2024.md: da Lei Complementar nº \n75, de 20 de maio de 1993 , e os dados e informações constantes do PGEA .../-, RESOLVE: Art. º Designar excepcionalmente o Procurador do Trabalho ",
+    "tempo_ms": 40601.5,
     "erro": false
   },
   {
     "ferramenta": "fulltext_plano",
     "pergunta": "C1",
     "tipo": "conteudo",
-    "label": "Gratificação Chefe de Gabinete = CC-4",
-    "acerto": false,
-    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40684.9,
+    "label": "Portaria 400/2026 PGT - fiscalização Ata Registro Preços",
+    "acerto": true,
+    "resposta": "Encontrado em BS-048-2026.md: Nº 400 — Designa fiscalização da execução da Ata de Registro de Preços nº /, firmada com a empresa MULTPAPER DISTRIBUIDORA DE PAPÉIS LTDA, e revoga a Portaria nº ., de de junho de . A DIRET",
+    "tempo_ms": 40589.6,
     "erro": false
   },
   {
@@ -266,7 +266,7 @@
     "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
     "acerto": false,
     "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40961.5,
+    "tempo_ms": 40922.8,
     "erro": false
   },
   {
@@ -276,27 +276,27 @@
     "label": "Portaria 2152 anula 1564 (PGEA 20.02.0001)",
     "acerto": false,
     "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40664.6,
+    "tempo_ms": 40585.6,
     "erro": false
   },
   {
     "ferramenta": "fulltext_plano",
     "pergunta": "C4",
     "tipo": "conteudo",
-    "label": "Portaria 332 - dispensa Ana Paula",
+    "label": "Funcionamento PRT16 20/12/2024 e 06/01/2025 - regime plantão",
     "acerto": false,
-    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40408.4,
+    "resposta": "Encontrado em BS-222-2024.md: Nº 12 — . Porto Alegre, de novembro de . MARTHA DIVERIO KRUSE S REGIONAIS S REGIONAIS S REGIONAIS S REGIONAIS S REGIONAIS S REGIONAIS S REGIO",
+    "tempo_ms": 40499.8,
     "erro": false
   },
   {
     "ferramenta": "fulltext_plano",
     "pergunta": "C5",
     "tipo": "conteudo",
-    "label": "Portaria 13 - designa Daniel 58º Ofício",
-    "acerto": false,
-    "resposta": "Nenhum resultado encontrado no full-text (boletins planos).",
-    "tempo_ms": 40423.1,
+    "label": "Edital 37/2025 PRT8 - redistribuição CC-02 Analista MPU",
+    "acerto": true,
+    "resposta": "Encontrado em BS-173-2025.md: Nº 37 — PGEA N° .../ Dispõe sobre o resultado preliminar da redistribuição do Cargo em Comissão exclusivamente interno, Código CC-, entre os servidores Analista do MPU/Direito lotados na s",
+    "tempo_ms": 40657.1,
     "erro": false
   },
   {
@@ -306,7 +306,7 @@
     "label": "Portaria 56/2025 - estrutura PRT10",
     "acerto": true,
     "resposta": "Portaria Nº 56/2025 - Altera estrutura organizacional da PRT10, publicada no BS-012-2025 | Gratificação do Chefe de Gabinete: CC-4",
-    "tempo_ms": 29.9,
+    "tempo_ms": 29.1,
     "erro": false
   },
   {
@@ -316,47 +316,47 @@
     "label": "Comissão SPARKS - Portaria 1124/2025",
     "acerto": true,
     "resposta": "Portaria Nº 1124/2025 - Constitui comissão SPARKS (BS-144-2025) | ",
-    "tempo_ms": 30.2,
+    "tempo_ms": 29.6,
     "erro": false
   },
   {
     "ferramenta": "docling_poc",
     "pergunta": "F3",
     "tipo": "factual",
-    "label": "Designação ARIANNE - 26º Ofício PRT10",
+    "label": "Designação ARIANNE - Portaria 231/2026 BS-142",
     "acerto": false,
     "resposta": "Portaria PRT10 Nº 240/2026 (BS-145-2026) - Art. 4º designa ARIANNE CASTRO DE ARAÚJO MIRANDA para o 26° Ofício Geral da PRT10",
-    "tempo_ms": 29.0,
+    "tempo_ms": 28.6,
     "erro": false
   },
   {
     "ferramenta": "docling_poc",
     "pergunta": "F4",
     "tipo": "factual",
-    "label": "Portaria 332/2025 - dispensa Ana Paula",
+    "label": "Portaria 332/2025 - dispensa Ana Paula PRT14",
     "acerto": false,
     "resposta": "Pesquisa no Docling: sem arquivo",
-    "tempo_ms": 31.0,
+    "tempo_ms": 35.8,
     "erro": false
   },
   {
     "ferramenta": "docling_poc",
     "pergunta": "F5",
     "tipo": "factual",
-    "label": "Portaria 1/2026 PRT1 - BS-002",
+    "label": "BSE 47/2026 - dispensa Fernanda Furlaneto CONAP PRT16",
     "acerto": false,
     "resposta": "Pesquisa no Docling: sem arquivo",
-    "tempo_ms": 284.1,
+    "tempo_ms": 30.1,
     "erro": false
   },
   {
     "ferramenta": "docling_poc",
     "pergunta": "C1",
     "tipo": "conteudo",
-    "label": "Gratificação Chefe de Gabinete = CC-4",
-    "acerto": true,
-    "resposta": "Portaria Nº 56/2025 - Altera estrutura organizacional da PRT10, publicada no BS-012-2025 | Gratificação do Chefe de Gabinete: CC-4",
-    "tempo_ms": 30.2,
+    "label": "Portaria 400/2026 PGT - fiscalização Ata Registro Preços",
+    "acerto": false,
+    "resposta": "Pesquisa no Docling: BS-218-2024.md",
+    "tempo_ms": 162.2,
     "erro": false
   },
   {
@@ -366,7 +366,7 @@
     "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
     "acerto": false,
     "resposta": "Pesquisa no Docling: sem arquivo",
-    "tempo_ms": 31.1,
+    "tempo_ms": 30.4,
     "erro": false
   },
   {
@@ -376,27 +376,27 @@
     "label": "Portaria 2152 anula 1564 (PGEA 20.02.0001)",
     "acerto": false,
     "resposta": "Pesquisa no Docling: sem arquivo",
-    "tempo_ms": 30.4,
+    "tempo_ms": 31.2,
     "erro": false
   },
   {
     "ferramenta": "docling_poc",
     "pergunta": "C4",
     "tipo": "conteudo",
-    "label": "Portaria 332 - dispensa Ana Paula",
+    "label": "Funcionamento PRT16 20/12/2024 e 06/01/2025 - regime plantão",
     "acerto": false,
-    "resposta": "Pesquisa no Docling: sem arquivo",
-    "tempo_ms": 30.3,
+    "resposta": "Pesquisa no Docling: BS-010-2025.md",
+    "tempo_ms": 37.3,
     "erro": false
   },
   {
     "ferramenta": "docling_poc",
     "pergunta": "C5",
     "tipo": "conteudo",
-    "label": "Portaria 13 - designa Daniel 58º Ofício",
+    "label": "Edital 37/2025 PRT8 - redistribuição CC-02 Analista MPU",
     "acerto": false,
-    "resposta": "Pesquisa no Docling: sem arquivo",
-    "tempo_ms": 30.5,
+    "resposta": "Pesquisa no Docling: BS-019-2026.md",
+    "tempo_ms": 35.6,
     "erro": false
   }
 ]

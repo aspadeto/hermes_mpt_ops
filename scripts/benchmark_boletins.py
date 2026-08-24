@@ -28,79 +28,80 @@ PYTHON = "/opt/data/hermes-data/.tool-venv/bin/python"
 
 # ------------------------------------------------------------
 # 10 perguntas: 5 factuais + 5 conteúdo
+# Lista fornecida pelo usuário em 23/08/2026 — NÃO alterar conteúdos.
 # ------------------------------------------------------------
 QUESTIONS = [
     # ---- FACTUAIS (5) ----
     {
         "id": "F1", "tipo": "factual",
-        "pergunta": "qual a portaria que altera a estrutura organizacional da PRT10",
-        "expected": ["56", "012", "12/2025"],
+        "pergunta": "Em janeiro de 2025 a estrutura organizacional da PRT10 foi alterada por qual portaria?",
+        "expected": ["56", "012", "12/2025", "BS-012"],
         "boletim_esperado": "012",
         "label": "Portaria 56/2025 - estrutura PRT10",
     },
     {
         "id": "F2", "tipo": "factual",
-        "pergunta": "em qual boletim foi publicada a comissão SPARKS",
-        "expected": ["1124", "144", "144/2025"],
+        "pergunta": "Em qual boletim foi publicada a portaria que constitui a comissão SPARKS?",
+        "expected": ["1124", "144", "144/2025", "BS-144"],
         "boletim_esperado": "144",
         "label": "Comissão SPARKS - Portaria 1124/2025",
     },
     {
         "id": "F3", "tipo": "factual",
-        "pergunta": "qual ato designa ARIANNE CASTRO DE ARAÚJO MIRANDA para o 26º Ofício da PRT10",
-        "expected": ["ARIANNE", "142", "142/2026"],
+        "pergunta": "Qual ato emitido entre julho e agosto de 2026 designa ARIANNE CASTRO DE ARAÚJO MIRANDA para o 26° Ofício Especializado da PRT 10ª Região?",
+        "expected": ["231", "142", "142/2026", "BS-142", "ARIANNE"],
         "boletim_esperado": "142",
-        "label": "Designação ARIANNE - 26º Ofício PRT10",
+        "label": "Designação ARIANNE - Portaria 231/2026 BS-142",
     },
     {
         "id": "F4", "tipo": "factual",
-        "pergunta": "qual a portaria que dispensa a servidora Ana Paula Alves Dubieux",
-        "expected": ["332", "001/2026"],
+        "pergunta": "Qual a portaria publicada entre dezembro de 2025 e janeiro de 2026 que dispensa a servidora Ana Paula Alves Dubieux da Comissão de Gestão Socioambiental da PRT14?",
+        "expected": ["332", "001/2026", "BS-001", "Ana Paula"],
         "boletim_esperado": "001",
-        "label": "Portaria 332/2025 - dispensa Ana Paula",
+        "label": "Portaria 332/2025 - dispensa Ana Paula PRT14",
     },
     {
         "id": "F5", "tipo": "factual",
-        "pergunta": "qual a portaria 1 do boletim 002/2026 da PRT1",
-        "expected": ["1", "002/2026"],
-        "boletim_esperado": "002",
-        "label": "Portaria 1/2026 PRT1 - BS-002",
+        "pergunta": "Em março de 2026 a Procuradora do Trabalho Fernanda Furlaneto foi dispensada do encargo de Coordenadora da CONAP da PRT da 16ª Região, em qual Boletim a portaria foi publicada?",
+        "expected": ["47", "047", "BS-047", "47/2026", "Fernanda", "Furlaneto"],
+        "boletim_esperado": "047",
+        "label": "BS 47/2026 - dispensa Fernanda Furlaneto CONAP PRT16",
     },
     # ---- CONTEÚDO (5) ----
     {
         "id": "C1", "tipo": "conteudo",
-        "pergunta": "qual a gratificação do Chefe de Gabinete da portaria de estrutura organizacional da PRT10",
-        "expected": ["CC-4", "CHEFE DE GABINETE"],
-        "boletim_esperado": "012",
-        "label": "Gratificação Chefe de Gabinete = CC-4",
+        "pergunta": "Sobre o que trata a Portaria 400/2026 da PGT?",
+        "expected": ["400", "fiscalização", "ata", "registro", "preços"],
+        "boletim_esperado": "",
+        "label": "Portaria 400/2026 PGT - fiscalização Ata Registro Preços",
     },
     {
         "id": "C2", "tipo": "conteudo",
-        "pergunta": "sobre o que versa a portaria 26 da PRT18",
-        "expected": ["Luziânia", "inventariar", "regularizar"],
+        "pergunta": "Sobre o que versa a portaria 26 da PRT18?",
+        "expected": ["Luziânia", "inventariar", "regularizar", "bens"],
         "boletim_esperado": "050",
         "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
     },
     {
         "id": "C3", "tipo": "conteudo",
-        "pergunta": "qual portaria anula a portaria 1564.2025 do PGEA 20.02.0001",
-        "expected": ["2152", "1564", "ANULAR"],
+        "pergunta": "Qual portaria anula a portaria 1564.2025 do PGEA 20.02.0001?",
+        "expected": ["2152", "1564", "ANULAR", "anula"],
         "boletim_esperado": "001",
         "label": "Portaria 2152 anula 1564 (PGEA 20.02.0001)",
     },
     {
         "id": "C4", "tipo": "conteudo",
-        "pergunta": "sobre o que versa a portaria 332 de 30 de dezembro de 2025",
-        "expected": ["332", "Dispensar", "Ana Paula"],
-        "boletim_esperado": "001",
-        "label": "Portaria 332 - dispensa Ana Paula",
+        "pergunta": "Como se deu o funcionamento de todas as unidades da Procuradoria Regional do Trabalho da 16ª Região durante os dias 20/12/2024 e 06/01/2025?",
+        "expected": ["plantão", "16", "16ª", "20/12", "06/01"],
+        "boletim_esperado": "",
+        "label": "Funcionamento PRT16 20/12/2024 e 06/01/2025 - regime plantão",
     },
     {
         "id": "C5", "tipo": "conteudo",
-        "pergunta": "qual portaria designa Daniel Gemignani para o 58º Ofício",
-        "expected": ["13", "Daniel", "58"],
-        "boletim_esperado": "004",
-        "label": "Portaria 13 - designa Daniel 58º Ofício",
+        "pergunta": "Sobre o que trata o Edital 37/2025 da PRT8?",
+        "expected": ["37", "redistribuição", "comissão", "CC-02", "analista"],
+        "boletim_esperado": "",
+        "label": "Edital 37/2025 PRT8 - redistribuição CC-02 Analista MPU",
     },
 ]
 
@@ -138,6 +139,7 @@ def rodar_ferramenta(script: str, pergunta: str) -> dict:
 
 
 def avaliar(q: dict, resposta: str) -> tuple[bool, list[str]]:
+    """Avalia se a resposta contém os termos esperados do ground truth."""
     r_upper = resposta.upper()
     encontrados = [t for t in q["expected"] if t.upper() in r_upper]
     if q["boletim_esperado"] and q["boletim_esperado"] not in r_upper:
@@ -179,7 +181,6 @@ def main():
     json_path = dest / "benchmark_resultado.json"
     json_path.write_text(json.dumps(resultados, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # Tabela consolidada
     print("\n" + "=" * 70)
     print("BENCHMARK — ACERTO POR FERRAMENTA × PERGUNTA (10 perguntas)")
     print("=" * 70)
@@ -198,7 +199,6 @@ def main():
         print(linha)
     print("-" * len(cab))
 
-    # Por tipo
     print("\nACERTO POR TIPO:")
     for tipo in ("factual", "conteudo"):
         qs = [q for q in QUESTIONS if q["tipo"] == tipo]
