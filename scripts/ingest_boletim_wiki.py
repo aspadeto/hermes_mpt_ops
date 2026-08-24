@@ -29,16 +29,32 @@ def extract_boletim_fields(md_text: str) -> dict:
         "atos": [],
         "tipo": "boletim",
     }
-    m = re.search(r"^#\s+Boletim de Serviço\s+[Nn][°º]\s*(\d+)/(\d{4})", md_text, re.M)
+
+    # número/ano do heading principal (case-insensitive, sem depender de ^#)
+    m = re.search(r"BOLETIM\s+DE\s+SERVI[ÇC]O[^\n]*?0*(\d+)/(\d{4})", md_text, re.I)
     if m:
-        data["numero"] = m.group(1)
+        data["numero"] = m.group(1).zfill(3)
         data["ano"] = m.group(2)
-    m2 = re.search(r"Boletim de Serviço[^\n]*?(\d{2}/\d{2}/\d{4})", md_text)
-    if m2:
-        data["data"] = m2.group(1)
+
+    # data: janela após o heading do boletim → "SEXTA-FEIRA, 17 DE JANEIRO DE 2025"
+    if m:
+        window = md_text[m.start():m.start() + 220]
+        m_date = re.search(r"(\d{1,2})\s+DE\s+([A-ZÇÃÕÁÉÍÓÚ]+)\s+DE\s+(\d{4})", window)
+        if m_date:
+            dia = m_date.group(1).zfill(2)
+            mes = {
+                "JANEIRO": "01", "FEVEREIRO": "02", "MARÇO": "03", "ABRIL": "04",
+                "MAIO": "05", "JUNHO": "06", "JULHO": "07", "AGOSTO": "08",
+                "SETEMBRO": "09", "OUTUBRO": "10", "NOVEMBRO": "11", "DEZEMBRO": "12",
+            }.get(m_date.group(2).upper(), "")
+            if mes:
+                data["data"] = f"{dia}/{mes}/{m_date.group(3)}"
+
     regionais = sorted(set(re.findall(r"PRT-?\d+[ªº]", md_text)))
     data["regionais"] = regionais
 
+    # ajuste 2: parar ementa em headings internos também
+    heading_interno = re.compile(r"^#{1,6}\s+#")
     atos = []
     current = None
     current_ementa = []
@@ -56,6 +72,8 @@ def extract_boletim_fields(md_text: str) -> dict:
         s = line.strip()
         if not s or s.startswith("<!--") or s.startswith("|"):
             continue
+        if heading_interno.match(s):
+            continue
         current_ementa.append(s)
     if current is not None and current_ementa:
         current["ementa"] = " ".join(current_ementa)
@@ -64,6 +82,11 @@ def extract_boletim_fields(md_text: str) -> dict:
     cleaned = []
     for a in atos:
         e = a.get("ementa", "")
+        # ajuste 3: normalizar número de ato e remover ruído
+        e = re.sub(r"\s+", " ", e).strip()
+        e = re.sub(r"N[º°]\s*\d+,\s*DE\s+\d{1,2}\s+DE\s+[A-ZÇÃÕÁÉÍÓÚ]+\s+DE\s+\.?\d{4}", "", e, flags=re.I)
+        e = re.sub(r"N[º°]\s*\d+,\s*DE\s+\.?\d{4}", "", e, flags=re.I)
+        e = re.sub(r"N[º°]\s*\d+\s+DE\s+\.?\d{4}", "", e, flags=re.I)
         e = re.sub(r"\s+", " ", e).strip()
         e = e[:180]
         if not e:
@@ -128,9 +151,10 @@ def append_index(slug: str, title: str) -> None:
         index_path.write_text(text, encoding="utf-8")
 
 
-def append_log(date_str: str, title: str) -> None:
+def append_log(date_str: str, title: str, ano: str = "") -> None:
     log_path = DEFAULT_LOG
-    entry = f"## [{date_str}] ingest | Boletim {title}\n- Arquivo: entities/{title.lower()}.md\n\n"
+    log_date = date_str.strip() or f"{ano}-01-01" if ano else "s/d"
+    entry = f"## [{log_date}] ingest | Boletim {title}\n- Arquivo: entities/{title.lower()}.md\n\n"
     text = log_path.read_text(encoding="utf-8")
     if title in text:
         return
@@ -154,7 +178,7 @@ def ingest_one(bs_md: Path, dry_run: bool = False) -> Path | None:
         return out
     out.write_text(page, encoding="utf-8")
     append_index(slug, f"BS-{numero}/{ano}")
-    append_log(fields.get("data") or "", f"BS-{numero}/{ano}")
+    append_log(fields.get("data") or "", f"BS-{numero}/{ano}", fields.get("ano") or "")
     return out
 
 
