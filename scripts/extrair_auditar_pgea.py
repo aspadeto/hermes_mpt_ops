@@ -21,6 +21,9 @@ HEADER_RE = re.compile(
     re.IGNORECASE,
 )
 
+HISTORICO_RE = re.compile(r"[Hh]ist[óo]rico do [Pp]rocedimento|Hist[óo]rico do Procedimento")
+CABECALHO_BOLETIM_RE = re.compile(r"^(PROCURADORIA-GERAL\s*\n?.*?(BSE|Boletim)|Boletim de Servi)[a-zãé]", re.I)
+
 def peca_da_linha(linha):
     m = HEADER_RE.match(linha.strip())
     if not m:
