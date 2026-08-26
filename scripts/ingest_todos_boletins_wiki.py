@@ -46,6 +46,9 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--only", type=str, default="")
+    parser.add_argument("--use-llm", action="store_true", help="Usa LLM para enriquecer campos")
+    parser.add_argument("--llm-model", help="Modelo OpenRouter (default: LLM_ENRICH_MODEL env var)")
+    parser.add_argument("--api-key", help="Chave da API OpenRouter (obrigatório)")
     args = parser.parse_args()
 
     kb = Path(args.kb)
@@ -78,7 +81,7 @@ def main() -> int:
         if targets and path.stem.lower().replace("bs-", "bs-") not in targets:
             continue
         try:
-            out = ingest_one(path, dry_run=args.dry_run)
+            out = ingest_one(path, dry_run=args.dry_run, use_llm=args.use_llm, llm_model=args.llm_model, api_key=args.api_key)
         except Exception as e:
             errors.append(f"{path.name}: {e}")
             continue
