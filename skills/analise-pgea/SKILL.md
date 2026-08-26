@@ -435,6 +435,23 @@ cabeçalho cria seção duplicada (33 seções para 14 peças reais).
   `(?=<!-- pág|\n## |\Z)`. Lição: a auditoria pegou um bug REAL do parser (não
   da extração) — páginas pequenas expõem bugs de medição que as grandes escondem.
 - **`sqlite3` CLI não existe no host** — para ler `pendencias.db` (ou qualquer banco) via `ssh host`, usar o módulo python3: `ssh host 'python3 -c "import sqlite3; ..."'` em vez do binário.
+- **PGEA que é essencialmente um Boletim encartado => `extrair_auditar_pgea.py` retorna 0 peças** (validado 25/08/2026, PGEA 006534/2025):
+  `HEADER_RE` só reconhece o cabeçalho de peça de autos digitais
+  (`<TIPO> NNNNNN.AAAA (ID) − PGEA ...`). Quando o corpo do PDF é um **documento
+  encartado com cabeçalho próprio que se repete a cada página** — ex. Boletim
+  (`PROCURADORIA-GERAL / BSE NNN/AAAA / CIRCULAÇÃO:...`) ou portaria juntada —
+  **nenhuma página casa** → inventário dá 0 peças e a extração sai só com a
+  `## Capa` (corpo inteiro de fora; Camada 3 acusa 0/N páginas cobertas). Isso
+  **não é bug do PDF**, é o limiar do detector. **Antes de confiar na saída**
+  ("0 peças") numa extração de PGEA, conferir o cabeçalho real da página 2 com
+  pymupdf: se não for `<TIPO> NNNNNN.AAAA (ID) − PGEA`, o documento é encartado
+  e cai nesse caso. **Fix planejado:** detector de fallback "documentos
+  encartados" — quando `HEADER_RE` achar 0, agrupar por blocos contíguos (Capa;
+  corpo por documento cujo cabeçalho contínuo muda; bloco `HISTÓRICO DO
+  PROCEDIMENTO` `Data|Movimento|Usuário` no fim). Granularidade recomendada:
+  **um bloco por documento inteiro** (mais robusto) em vez de segmentar cada ato
+  do Boletim (mais fino, mais frágil). Implementar como detector secundário,
+  manter `HEADER_RE` como primário, sem mudar assinatura/uso do script.
 - **Não pular entidades:** ao mapear estruturas organizacionais, criar página para **cada** entidade, não apenas as principais. Usuário espera completude — verificar se todas as unidades mencionadas na fonte foram criadas antes de declarar conclusão.
 - **Sempre verificar o histórico:** o PGEA pode estar em estágio diferente do esperado — ler os movimentos recentes antes de analisar.
 - **PGEAs de outras Regionais:** guardar separado em `modelos/`, nunca misturar com PGEAs da PRT14.

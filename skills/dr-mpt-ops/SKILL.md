@@ -49,6 +49,21 @@ cron jobs com `workdir`; para o chat, carregar manualmente quando relevante.
 
 **NUNCA usar "PRT14" nem marcas de setor/órgão** em documentação, scripts, nomes de arquivos ou conversa — o ambiente será distribuído para outras regionais/servidores/chefes e deve ser **aderente a qualquer contexto**. Exemplos do que já foi corrigido: "Framework PRT14" → "Framework — Camada de Dados"; `prt14.db` → `regional-orcamento.db`; repos renomeados para `hermes_mpt_*`. Ao criar nome de arquivo/script/seção, perguntar-se: *"esse nome faria sentido em outro setor?"*. Quando o usuário corrigir um nome com marca de setor, renomear o artefato + conteúdo (sed em todo o repo) e registrar a preferência.
 
+### Preferências de interação do usuário (corrigidas 25/08/2026)
+
+- **Restringir-se ESTRITAMENTE ao escopo do pedido.** Não extrapolar, não executar
+  ações além do solicitado, e NÃO oferecer menu de opções de execução quando a
+  pergunta do usuário é apenas **explicativa/metodológica** (ex.: ele pergunta
+  \"como você buscaria a pasta X\" — não sair procurando X e propor apagá-la).
+  Distinguir pergunta sobre *método* de pedido de *execução*.
+- **Quando houver razoável insegurança sobre a tarefa** (ambiguidade de escopo,
+  risco, incerteza sobre o alvo), **PARAR, apresentar um plano claro do que será
+  feito e solicitar decisão do usuário ANTES de executar** — não prosseguir com
+  ações que extrapolem o pedido. Também vale para alterar código versionado do
+  OPS (ex.: evoluir um script): mostrar plano e aguardar aprovação.
+- Estas regras somam-se ao `AGENTS.md` do OPS (pensar antes de agir, discutir
+  antes de mudanças estruturais, mudanças cirúrgicas).
+
 Stack de armazenamento (verificado ago/2026): **SEM Redis** — sessões/conversas, pendências e dados orçamentários usam SQLite; config/memória/skills em arquivos `~/.hermes/`; conhecimento em git/Markdown. Não há processo, binário ou container Redis no ambiente; as únicas menções a "redis" no código do Hermes são regras de redação de URLs (`redis://...`) no `redact.py`.
 
 ## Onde Mora o Quê
