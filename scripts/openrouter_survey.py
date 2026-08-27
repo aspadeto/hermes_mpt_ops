@@ -13,13 +13,14 @@ ambiente, e regenera:
 Uso:
   python3 openrouter_survey.py            # coleta e grava (modo normal)
   python3 openrouter_survey.py --dry-run  # só alerta subprovedores instáveis, não grava
+  python3 openrouter_survey.py --stdout    # imprime o markdown, não grava
 
-Padrão cron (no_agent, silencioso): sem argumentos, o script grava os arquivos e
-imprime apenas uma linha de confirmação; com --dry-run imprime ALERTA apenas se
-houver subprovedor com uptime <95% (watchdog).
+Padrão cron (no_agent, silencioso): modo normal grava e imprime só a linha de
+confirmação; --dry-run emula watchdog (stdout = ALERTA se houver subprovedor
+com uptime 1d <95%).
 
-Embrião da melhoria futura: a seção "Recomendação p/ only/order" já calcula, por
-necessidade auxiliar, o melhor subprovedor (picker) ranqueado por score
+Embrião da melhoria futura: seção "Recomendação por necessidade" já calcula o
+melhor subprovedor por necessidade auxiliar (title/compression/vision) via score
 (30% custo + 30% throughput + 25% latência + 15% uptime).
 """
 
@@ -47,25 +48,21 @@ LEVANTAMENTO_MD = SURVEY_DIR / "levantamento.md"
 # ---------------------------------------------------------------------------
 # Modelos a levantar
 # ---------------------------------------------------------------------------
-# Modelos principais (agente): default atual + alternativas candidatas.
 MAIN_MODELS = {
     "deepseek/deepseek-v4-flash-0731": "DEFAULT atual (agente)",
     "deepseek/deepseek-v4-pro-0813": "alternativa agente (qualidade/raciocínio)",
     "qwen/qwen3.8-flash": "alternativa agente (barata)",
 }
 
-# Modelos auxiliares (title/compression/vision): candidatos possíveis.
 AUX_MODELS = [
     "google/gemini-2.5-flash-lite",
     "google/gemini-2.5-flash",
     "google/gemini-3.6-flash",
     "openai/gpt-4o-mini",
-    "openai/gpt-5-mini",
     "deepseek/deepseek-v4-flash-0731",
     "qwen/qwen3.8-flash",
 ]
 
-# Necessidades auxiliares do Hermes e seus candidatos (para a seção de recomendação).
 AUX_NEEDS = {
     "Título (title)": {
         "requer_visao": False,
@@ -81,26 +78,25 @@ AUX_NEEDS = {
     },
 }
 
-# ---------------------------------------------------------------------------
-# Pesos do score (eless para recomendar only/order)
-# ---------------------------------------------------------------------------
-_W_CUSTO = 0.30
-_W_TROUGHPUT = 0.30
-_W_LATENCIA = 0.25
-_W_UPTIME = 0.15
+_W_CUSTO, _W_TROUGHPUT, _W_LATENCIA, _W_UPTIME = 0.30, 0.30, 0.25, 0.15
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+def _hermes_home() -> Path:
+    return Path(os.environ.get("HERMES_HOME", str(Path.home() / ".hermes")))
+
+
 def _api_key() -> str:
     """Lê a chave OpenRouter do .env do Hermes. Nunca a imprime."""
-    env_path = Path(os.environ.get("HERMES_HOME", str(Path.home() / ".hermes"))) / ".env"
-    if not env_path.exists():
-        env_path = Path.home() / ".hermes" / ".env"
-    for line in env_path.read_text().splitlines():
-        if line.startswith("OPENROUTER_API_KEY="):
-            return line.split("=", 1)[1].strip().strip('"').strip("'")
+    env_candidates = [Path(os.environ.get("HERMES_HOME", str(Path.home() / ".hermes"))) / ".env",
+                      Path.home() / ".hermes" / ".env"]
+    for p in env_candidates:
+        if p.exists():
+            for line in p.read_text().splitlines():
+                if line.startswith("OPENROUTER_API_KEY="):
+                    return line.split("=", 1)[1].strip().strip('"').strip("'")
     raise RuntimeError("OPENROUTER_API_KEY não encontrada no .env do Hermes")
 
 
@@ -118,12 +114,20 @@ def _fmt(v) -> str:
     return str(v)
 
 
+def _fprice(v):
+    """Converte preço por token (USD) em USD por milhão de tokens."""
+    try:
+        return round(float(v) * 1e6, 4)
+    except (TypeError, ValueError):
+        return None
+
+
 def _score(row: dict) -> float:
     """Score combinado (0-100, maior = melhor) p/ ranquear subprovedores."""
-    p = (row.get("price_prom_Mtok") or 0) + (row.get("price_comp_Mtok") or 0)
+    p = (row.get("prompt_usd_per_M") or 0) + (row.get("comp_usd_per_M") or 0)
     thr = row.get("thr_p50_tps") or 0
-    lat = row.get("lat_p50_ms") or 9999
-    up = row.get("up1d") or 0
+    lat = row.get("lat50_ms") or 9999
+    up = row.get("up1d_pct") or 0
     cost_score = 100 - (math.log(p + 1) / math.log(10)) * 20 if p > 0 else 100
     thr_score = min(100, thr / 1.5)
     lat_score = max(0, 100 - lat / 20)
@@ -150,11 +154,7 @@ def _collect(models, key: str, is_main: bool) -> list[dict]:
             pr = e.get("pricing", {})
             lat = e.get("latency_last_30m") or {}
             thr = e.get("throughput_last_30m") or {}
-            def _f(v):
-                try:
-                    return round(float(v) * 1e6, 4)
-                except (TypeError, ValueError):
-                    return None
+            up = e.get("uptime_last_1d")
             rows.append({
                 "model": mid,
                 "label": label,
@@ -163,47 +163,51 @@ def _collect(models, key: str, is_main: bool) -> list[dict]:
                 "provider": e.get("provider_name"),
                 "quant": e.get("quantization"),
                 "ctx": e.get("context_length"),
-                "prompt_usd_per_M": _f(pr.get("prompt")),
-                "comp_usd_per_M": _f(pr.get("completion")),
+                "prompt_usd_per_M": _fprice(pr.get("prompt")),
+                "comp_usd_per_M": _fprice(pr.get("completion")),
                 "thr_p50_tps": thr.get("p50"),
                 "thr_p90_tps": thr.get("p90"),
-                "lat_p50_ms": lat.get("p50"),
-                "lat_p90_ms": lat.get("p90"),
-                "up1d_pct": round(e.get("uptime_last_1d", 0), 2) if isinstance(e.get("uptime_last_1d"), (int, float)) else None,
+                "lat50_ms": lat.get("p50"),
+                "lat90_ms": lat.get("p90"),
+                "up1d_pct": round(up, 2) if isinstance(up, (int, float)) else None,
                 "status": e.get("status"),
             })
-        # tweak done
+        time.sleep(0.3)
     return rows
 
 
+# ---------------------------------------------------------------------------
 # Markdown
+# ---------------------------------------------------------------------------
 def _markdown_table(rows: list[dict]) -> str:
     lines = [
         "| Provedor | Quant | Ctx | $prompt/M | $comp/M | thr50 t/s | lat50 ms | up 1d % |",
         "|----------|-------|-----|-----------|----------|-----------|----------|---------|",
     ]
-    for r in sorted(rows, key=lambda r: ((r.get("prompt_usd_per_Mtok") or 9e9), r["provider"].lower())):
+    for r in sorted(rows, key=lambda r: ((r.get("prompt_usd_per_M") or 9e9), r["provider"].lower())):
         lines.append(
             f"| {r['provider']} | {r['quant']} | {r['ctx']} | "
-            f"{_fmt(r.get('prompt_usd_per_Mtok'))} | {_fmt(r.get('comp_usd_per_Mtok'))} | "
-            f"{r.get('thr_p50_tps') if r.get('thr_p50_tps') is not None else '—'} t/s | "
-            f"{r.get('lat_p50_ms') if r.get('lat_p50_ms') is not None else '—'} ms | "
-            f"{r.get('up1d_pct')} |"
+            f"{_fmt(r.get('prompt_usd_per_M'))} | {_fmt(r.get('comp_usd_per_M'))} | "
+            f"{r.get('thr_p50_tps', '—')} | {r.get('lat50_ms', '—')} | "
+            f"{r.get('up1d_pct', '—')} |"
         )
     return "\n".join(lines)
 
 
+def _marca_visao(r) -> str:
+    return " (visão)" if r.get("has_vision") else ""
+
+
 def _recomend_need(need: str, cfg: dict, aux_rows: list[dict]) -> str:
     cands = [r for r in aux_rows if r["model"] in cfg["candidatos"]]
-    if cfg["requer_visao"]:
+    if cfg.get("requer_visao"):
         cands = [r for r in cands if r.get("has_vision")]
-    best = None
-    for r in sorted(cands, key=lambda r: -_score(r)):
-        best = r
-        break
-    if not best:
+    if not cands:
         return f"| {need} | — | sem endpoint disponível |"
-    return f"| {need} | `{best['model']}` | {best['provider']} (score {_score(best):.0f}, $p {_fmt(best.get('prompt_usd_per_Mtok'))}, {best.get('thr_p50_tps') or 0} t/s, {best.get('lat_p50_ms') or 0}ms) |"
+    best = max(cands, key=lambda r: _score(r))
+    return (f"| {need} | `{best['model']}` | {best['provider']}{_marca_visao(best)} "
+            f"(score {_score(best):.0f}, $p {_fmt(best.get('prompt_usd_per_M'))}, "
+            f"{best.get('thr_p50_tps') or 0} t/s, {best.get('lat50_ms') or 0}ms) |")
 
 
 def generate_markdown(main_rows: list[dict], aux_rows: list[dict]) -> str:
@@ -211,17 +215,16 @@ def generate_markdown(main_rows: list[dict], aux_rows: list[dict]) -> str:
     L = []
     L.append("# Levantamento OpenRouter — subprovedores e recomendação")
     L.append("")
-    L.append(f"Gerado: {now} (automático 2x/semana). Fonte: OpenRouter `/models/<slug>/endpoints` (métricas 30min).")
+    L.append(f"Gerado: {now} (automático, 2x/semana). Fonte: OpenRouter `/models/<slug>/endpoints` (métricas 30min).")
     L.append("")
-    # modelos principais por modelo
     for mid in MAIN_MODELS:
         sub = [r for r in main_rows if r["model"] == mid]
-        L.append(f"## Modelo: `{mid}` ({MAIN_MODELS[mid]})")
+        L.append(f"## Modelo: `{mid}` — {MAIN_MODELS[mid]}")
         L.append("")
         L.append(_markdown_table(sub))
         L.append("")
-    # auxiliares
     L.append("## Modelos auxiliares")
+    L.append("")
     for mid in AUX_MODELS:
         sub = [r for r in aux_rows if r["model"] == mid]
         if not sub:
@@ -230,8 +233,7 @@ def generate_markdown(main_rows: list[dict], aux_rows: list[dict]) -> str:
         L.append("")
         L.append(_markdown_table(sub))
         L.append("")
-    # recomendação
-    L.append("## Recomendação por necessidade (embrião da melhoria futura)")
+    L.append("## Recomendação por necessidade")
     L.append("")
     L.append("> Score = 30% custo + 30% throughput + 25% latência + 15% uptime (heurística local, maior melhor).")
     L.append("")
@@ -243,6 +245,9 @@ def generate_markdown(main_rows: list[dict], aux_rows: list[dict]) -> str:
     return "\n".join(L)
 
 
+# ---------------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------------
 def main() -> int:
     ap = argparse.ArgumentParser(description="Levantamento OpenRouter de subprovedores")
     ap.add_argument("--dry-run", action="store_true",
