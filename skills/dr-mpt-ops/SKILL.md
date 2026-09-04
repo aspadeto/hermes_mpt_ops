@@ -177,7 +177,17 @@ real com chmod 600; backup de valores antes de sanitizar; conferir
 
 ### Backup exclui repos git
 
-`hermes-backup.py` usa `DATA_EXCLUDE = {".google-venv", "hermes_mpt_kb", "hermes_mpt_ops", "backups"}` — repos git são redundantes no tar.gz (já no GitHub). Reduziu backup de ~154MB → ~94MB. Ao criar repo git novo em `hermes-data/`, incluir na exclusão.
+`hermes-backup.py` enxuga o tar excluindo: `DATA_EXCLUDE = {".google-venv", ".tool-venv", "mpt_workspace", "backups", "ottomator-agents"}` (repos git versionados já estão no GitHub, logo são redundantes no tar.gz) + `EXCLUDE_PATTERNS` de `.hermes/` (cache/, home/, .ssh/, hermes-agent/, node/, lsp/, backups/, state-snapshots/) + `GLOBAL_EXCLUDE_SUBSTR` que casa em qq profundidade (`.cache`, `.model-cache`, `.hub/index-cache`, `/models/`, `/bin/uv`, `/bin/tirith`, `.npm/`, `huggingface/hub` — coisas regeneráveis por download/instalação). Em 04/09/2026 isso derrubou o tar de 2.46GB → 507MB (cabe na cota grátis de 15GB do Drive). ⚠️ Ao criar venv/repo/modelo grande em `hermes-data/`, incluir na exclusão correspondente. ⚠️ Import do script usa só `from ops_paths import HERMES_DATA_ROOT` — as vars `OPS_DIR`/`KB_DIR` NÃO existem mais em `ops_paths.py` (renomeadas p/ `OPS_PATH`/`KB_PATH`); não reimportar nomes órfãos.
+
+**⚠️ Exclusões do backup ficam obsoletas → tar infla → estoura o Drive (15GB free):**
+venvs regeneráveis (`.tool-venv` ~5.5G, `hermes-agent/`, `node/`, `lsp/`, `bin/`,
+`profiles/`), `home/` e backups antigos (`~/.hermes/backups/` — loop) precisam
+estar em `EXCLUDE`/`DATA_EXCLUDE`; por padrão **só** `.google-venv` está em
+`DATA_EXCLUDE`. O tar saltou de ~94MB (meta) para ~2230MB sem isso, estourando
+a cota e travando o upload (`storageQuotaExceeded`). Ao religar um backup,
+dimensionar com `du -sh` e conferir as exclusões ANTES. Roteiro de diagnóstico
+(onde o cron grava o erro, cadeia de sintomas, reauth `invalid_grant`):
+`references/backup-troubleshooting.md`.
 
 **`EXTRA_SECRETS` (host-secrets/ — desde 07/08/2026):** o backup também inclui
 segredos do host fora dos 2 diretórios padrão, em `host-secrets/` dentro do
@@ -370,6 +380,7 @@ Quando o usuário perguntar sobre gasto/uso de tokens, usar **`hermes insights`*
 
 ## Referências
 
+- `references/backup-troubleshooting.md` — diagnóstico de falha do backup (cron output, exclusões obsoletas → quota, reauth token)
 - `references/pdf2wiki-ingestion.md` — heurísticas e fluxo do pipeline
 - `references/cron-wrapper-pattern.md` — padrão de wrapper para cron
 - `references/migracao-nomes-neutros.md` — refatoração estrutural (renomear repos/pastas/scripts em todo o ambiente)
