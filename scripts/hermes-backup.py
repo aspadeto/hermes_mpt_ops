@@ -14,7 +14,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 # Importa configuração centralizada de caminhos
-from ops_paths import HERMES_DATA_ROOT, OPS_DIR, KB_DIR, OPS_DATA
+from ops_paths import HERMES_DATA_ROOT
 
 HERMES_HOME = "/home/hermes/.hermes"
 DATA_DIR = str(HERMES_DATA_ROOT)
@@ -35,17 +35,38 @@ EXCLUDE_PATTERNS = [
     "logs/",
     "sessions/",
     "webui/",
+    # Regeneráveis em DR — código/venv/instalação (não são dados do usuário)
+    "hermes-agent/",   # código + venv do agente (reinstalável via pip/install)
+    "node/",           # runtime Node (reinstalável)
+    "lsp/",            # language servers (reinstaláveis)
+    "backups/",        # zip de backup antigo (não duplicar no Drive)
+    "state-snapshots/",
     "kanban.db*",
     "response_store.db*",
     "state.db*",
     "verification_evidence.db",
     "models_dev_cache.json",
     ".skills_prompt_snapshot.json",
+    # Regeneráveis baixáveis (não são dados do usuário) — em qq profundidade
+]
+
+# Glob: diretórios/arquivos regeneráveis por download/instalação, casados em
+# QUALQUER nível do path (caches de modelo, binários, .hub, retina de pip/npm)
+GLOBAL_EXCLUDE_SUBSTR = [
+    ".cache",
+    ".model-cache",
+    ".hub/index-cache",
+    "/models/",          # modelos ML baixados (gguf, onnx, embeddings)
+    "/bin/uv",
+    "/bin/tirith",
+    ".npm/",
+    "huggingface/hub",   # modelos HF baixados
+    "/.github",          # apenas questão de segurança/limpeza se aparecer
 ]
 
 # Excluded from data/ — repos git são versionados no GitHub,
 # backups/ é alvo da rotação, .google-venv é ambiente
-DATA_EXCLUDE = {".google-venv", "mpt_workspace", "backups"}
+DATA_EXCLUDE = {".google-venv", ".tool-venv", "mpt_workspace", "backups", "ottomator-agents"}
 
 # Segredos/config do HOST fora dos 2 diretórios padrão (VM nativa — ago/2026).
 # Cada tupla: (caminho_origem_no_host, arcname_dentro_do_tar.gz).
