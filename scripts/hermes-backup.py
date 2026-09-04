@@ -61,7 +61,6 @@ GLOBAL_EXCLUDE_SUBSTR = [
     "/bin/tirith",
     ".npm/",
     "huggingface/hub",   # modelos HF baixados
-    "/.github",          # apenas questão de segurança/limpeza se aparecer
 ]
 
 # Excluded from data/ — repos git são versionados no GitHub,
@@ -121,6 +120,15 @@ def delete_drive_file(file_id: str, name: str):
     run_gapi("drive", "delete", file_id)
 
 
+def is_global_excluded(name: str) -> bool:
+    """True se o path contém substrings de itens regeneráveis (caches/modelos/binários).
+    Casa em qualquer profundidade — independente do arcname de topo (.hermes/|data/)."""
+    for sub in GLOBAL_EXCLUDE_SUBSTR:
+        if sub in name:
+            return True
+    return False
+
+
 def create_tar_gz() -> str:
     """Create a compressed tar of HERMES_HOME + DATA_DIR, returns path."""
     os.makedirs(BACKUP_DIR, exist_ok=True)
@@ -137,13 +145,17 @@ def create_tar_gz() -> str:
                     return None
             elif f".hermes/{pat}" in name or name == f".hermes/{pat}":
                 return None
+        if is_global_excluded(name):
+            return None
         return tarinfo
 
     def filter_data(tarinfo):
-        """Exclude backups/ and wiki/ from data/ backup."""
+        """Exclude backups/ e wiki/ de data/ backup."""
         name = tarinfo.name
         parts = name.split("/")
         if len(parts) >= 2 and parts[1] in DATA_EXCLUDE:
+            return None
+        if is_global_excluded(name):
             return None
         return tarinfo
 
