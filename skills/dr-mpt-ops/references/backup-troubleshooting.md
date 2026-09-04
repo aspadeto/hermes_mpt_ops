@@ -24,9 +24,44 @@ env -i HOME=/home/hermes PATH=/usr/bin:/bin python3 ~/.hermes/scripts/hermes-bac
 | `ResumableUploadError ... storageQuotaExceeded` | quota do Drive (15GB free) estourou | stderr + stdout mostra o `💾 Size` do tar |
 | `RefreshError: invalid_grant` no `drive search` | token Google (`google_token.json`) precisa reauth | stderr antes do main |
 
-> `invalid_grant` = reautorizar OAuth (`google_setup.py --auth-url/--auth-code`,
-> como no checklist pós-migração). NÃO é bug do script — é setup que só o
-> usuário desbloqueia. Sem autenticação, nem `drive search` roda.
+> `invalid_grant` = token **revocado/expirou** → reautorizar OAuth. NÃO é bug do script — é setup que só o usuário desbloqueia. Sem autenticação, nem `drive search` roda.
+
+### Reauth OAuth entre 2 etapas (setup.py — o script é esse)
+
+O script de reauth é `setup.py` do skill google-workspace (**`google_setup.py` NÃO existe mais**):
+```bash
+GSETUP="/opt/data/hermes-data/.google-venv/bin/python \
+  /home/hermes/.hermes/skills/productivity/google-workspace/scripts/setup.py"
+env -i HOME=/home/hermes PATH=/usr/bin:/bin $GSETUP --check        # TOKEN_REVOKED se precisa reauth
+# 1) gera URL (já cobre gmail/calendar/drive/sheets/docs/contacts), o pendente fica salvo p/ o passo 2:
+env -i HOME=/home/hermes PATH=/usr/bin:/bin $GSETUP --auth-url
+# 2) usuário autoriza no navegador, a página de redirect http://localhost:1 FALHA (esperado),
+#    ele copia a URL inteira da barra e cola; conclui a troca de código→token:
+env -i HOME=/home/hermes PATH=/usr/bin:/bin $GSETUP --auth-code "http://localhost:1/?state=...&code=4/0ATs..."
+env -i HOME=/home/hermes PATH=/usr/bin:/bin $GSETUP --check        # AUTHENTICATED
+```
+Estado: `setup.py --check` → `TOKEN_REVOKED` vs `AUTHENTICATED`; `google_api.py drive search` valida ponta-a-ponta.
+
+## ⚠️ Drive trash conta CONTRA a quota (causa oculta de cota cheia)
+
+`storageQuotaExceeded` NÃO é só tar grande: a **lixeira do Drive conta contra os 15GB**. Neste
+execício a conta estava com 14.3GB em uso (quase cheia) apesar de só ~3GB de arquivos reais —
+os outros **11.8GB estavam na lixeira** (`usageInDriveTrash`). Logo, mesmo depois de enxugar o tar
+(2.46GB→507MB), a quota continua no limite até a lixeira ser esvaziada. **Sempre checar a cota
+ANTES e DEPOIS de enxugar o tar**:
+```bash
+# cota completa (limit / usage / usageInDriveTrash) — google_api.py não expõe, usar build direto:
+/opt/data/hermes-data/.google-venv/bin/python -c "
+import json, pathlib
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+c=Credentials.from_authorized_user_info(json.loads(pathlib.Path('/home/hermes/.hermes/google_token.json').read_text()))
+s=build('drive','v3',credentials=c,static_discovery=False)
+a=s.about().get(fields='storageQuota,user').execute()
+print(a['storageQuota'], a['user']['emailAddress'])"
+```
+Se `usageInDriveTrash` for alto: esvaziar a lixeira é **permanente e irreversível** (sem recuperação)
+→ pedir decisão explícita do usuário antes de limpar, ou ele mesmo limpa no site do Drive.
 
 ## ⚠️ Exclusões do backup ficam OBSOLETAS → tar infla → estoura quota
 
