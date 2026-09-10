@@ -174,6 +174,14 @@ painel antes de citar a URL.
 - Alterar rota/Access: dashboard Cloudflare (não precisa tocar no host)
 - Remover: `sudo cloudflared service uninstall` + remover túnel no dashboard
 
+### Expor MAIS um serviço no túnel JA ativo (e serví-lo como unit systemd user)
+
+Para um segundo serviço (ex: um app web de ferramenta de dev, como o `opencode web`) não criar túnel novo —o `cloudflared` único já faz o proxy:
+
+1. **Servir o serviço localmente como unit systemd user**— padrão `Type=simple` + `ExitStart` absoluto + `Linger=yes`. **systemd NÃO herda**.`.profile`/PATH do shell** → credenciais de auth via **`EnvironmentFile=`** (nunca `export` no `.profile`), e caminho absoluto no `ExecStart` (`~/.config/systemd/user/<svc>.service`).
+2. **Validar LOCAL primeiro** —`curl -s -o /dev/null -w '%{http_code}' http://localhost:<porta>` → `401` sem credencial (protegido) vs `200` com. Leia a senha **direto do env file** (`grep '^VAR=' file | cut -d= -f2`) — um snapshot copiado para `/tmp` pode divergir do que o serviço lê. Quando uma credencial é rejeitada, confirme a `401`-plain vs `200`-com-credencial-do-arquivo-fonte antes de culpar o serviço.
+3. **Expor no dashboard:** túnel existente → **Public Hostname** → subdomínio novo (`<svc>.<dominio>`) → `HTTP` → `localhost:<porta>` → Save.
+4. **Access:** criar application p/ o hostname e policy **Allow por e-mail do usuário** — **NUNCA "Everyone"** — principalmente quando o serviço expõe capacidade sensível (ex: codificar, executar).
 ## ⚠️ Migração de host: o túnel NÃO migra com backup (validado 07/08/2026)
 
 Ao mover o serviço para outra máquina (ex: container Docker → VM nativa), o
@@ -218,3 +226,5 @@ Fatos verificados na migração:
 - **Dashboard Hermes — serving, auth e session token:** `references/hermes-dashboard-serving.md`
   (dual auth model: loopback `HERMES_DASHBOARD_SESSION_TOKEN` vs não-loopback `dashboard.basic_auth`;
   systemd user service porta 9119; `--insecure` é no-op desde jun/2026)
+- **OpenCode Web — servir como unit systemd user + expor no túnel:** `references/opencode-web-serving.md`
+  (bin path “não-instalado”, env file `OPENCODE_SERVER_USERNAME/PASSWORD`, unit `opencode-web`, validação local 401/200, exposição via Public Hostname+Access)
