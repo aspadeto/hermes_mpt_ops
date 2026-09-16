@@ -232,14 +232,45 @@ def formatar_relevancia_score(conn: sqlite3.Connection, query_fts: str) -> list[
              "data": r["data_boletim"], "score": r["rank"]} for r in rows]
 
 
+def formatar_query_fts5(pergunta: str) -> str:
+    """Converte pergunta natural para query FTS5 mais eficaz.
+
+    Estratégia: remove stopwords comuns, mantém termos-chave, tenta frase
+    para nomes próprios (letras maiúsculas consecutivas).
+    """
+    # stopwords para remover (FTS5 ignora algumas, mas melhor remover explicitamente)
+    stop = {"qual", "quais", "a", "o", "as", "os", "de", "do", "da", "dos", "das",
+            "em", "para", "com", "por", "que", "e", "na", "no", "se", "um", "uma",
+            "sobre", "versa", "portaria", "designa", "foi", "publicada", "publicado",
+            "onde", "como", "ato", "atos", "não", "nesta", "deste", "servidora",
+            "bis", "ter", "qual"}
+    tokens = re.findall(r"[a-zA-Zà-úÀ-Ú0-9º°]+", pergunta.lower())
+    keywords = [t for t in tokens if t not in stop and len(t) >= 2]
+    if not keywords:
+        return ""
+    # se houver sequência de uppercase no original, tentar como frase
+    upper_seqs = re.findall(r"\b[A-ZÀ-Ú][A-ZÀ-Ú\s]{2,}[A-ZÀ-Ú]\b", pergunta)
+    phrase = ""
+    if upper_seqs:
+        # escolhe a sequência mais longa como frase
+        phrase = max(upper_seqs, key=len).strip().lower()
+    # query FTS5: termos separados por espaço (OR implícito) + frase entre aspas se houver
+    base = " ".join(keywords)
+    if phrase and phrase not in base:
+        return f'{base} "{phrase}"'
+    return base
+
+
 def buscar_fts5(conn: sqlite3.Connection, pergunta: str) -> dict:
     """Consulta FTS5 + ranking BM25 + metadados estruturais.
 
-    FTS5 não aceita parâmetro vinculado no MATCH; a query deve ser embutida.
-    Escapamos aspas simples para segurança.
+    Formula a query via formatar_query_fts5 para melhor recuperação.
     """
-    # escape single quotes para FTS5 (duplicar)
-    safe = pergunta.replace("'", "''")
+    query = formatar_query_fts5(pergunta)
+    if not query:
+        return {"scores": [], "tempo_ms": 0}
+
+    safe = query.replace("'", "''")
     t0 = time.time()
     sql = f"""
         SELECT
@@ -254,8 +285,7 @@ def buscar_fts5(conn: sqlite3.Connection, pergunta: str) -> dict:
     """
     try:
         rows = conn.execute(sql).fetchall()
-    except sqlite3.OperationalError as e:
-        # fallback: pesquisa por documento vazio retorna erro; retornamos lista vazia
+    except sqlite3.OperationalError:
         rows = []
     scores = [{"arquivo": r["arquivo"], "boletim": r["numero_boletim"],
                "data": r["data_boletim"], "score": r["rank"]} for r in rows]
@@ -263,13 +293,12 @@ def buscar_fts5(conn: sqlite3.Connection, pergunta: str) -> dict:
     return {"scores": scores, "tempo_ms": round(dt, 1)}
 
 
-def avaliar_acerto(q: dict, scores: list[dict]) -> tuple:
+def avaliar_acerto(q: dict, scores: list[dict]) -> bool:
     """Avalia se a busca recuperou o documento esperado.
     Critério: o arquivo esperado está no top-10.
     """
     esperado = q["boletim_esperado"]
-    encontrado = any(s["arquivo"] == esperado for s in scores)
-    return encontrado
+    return any(s["arquivo"] == esperado for s in scores)
 
 
 # ------------------------------------------------------------ main
@@ -299,7 +328,8 @@ def main():
     print("="*60)
 
     for q in QUESTOES:
-        scores = buscar_fts5(conn, q["pergunta"])["scores"]
+        busca = buscar_fts5(conn, q["pergunta"])
+        scores = busca["scores"]
         acertou = avaliar_acerto(q, scores)
         resultado = {
             "ferramenta": "fts5",
@@ -308,9 +338,10 @@ def main():
             "label": q["label"],
             "pergunta": q["pergunta"],
             "acerto": acertou,
-            "tempo_ms": scores[0]["tempo_ms"] if scores else 0,
+            "tempo_ms": busca["tempo_ms"],
             "top3": [{"arquivo": s["arquivo"], "boletim": s["boletim"], "score": s["score"]} for s in scores[:3]],
             "boletim_esperado": q["boletim_esperado"],
+            "query_usada": formatar_query_fts5(q["pergunta"]),
         }
         resultados.append(resultado)
         status = "✅" if acertou else "❌"
