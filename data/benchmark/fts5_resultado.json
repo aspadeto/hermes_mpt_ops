@@ -1,0 +1,132 @@
+[
+  {
+    "ferramenta": "fts5",
+    "pergunta_id": "F1",
+    "tipo": "factual",
+    "label": "Portaria 56/2025 - estrutura PRT10",
+    "pergunta": "Qual a portaria que altera a estrutura organizacional da PRT10?",
+    "acerto": [
+      false
+    ],
+    "tempo_ms": 0,
+    "top3": [],
+    "boletim_esperado": "BS-012-2025"
+  },
+  {
+    "ferramenta": "fts5",
+    "pergunta_id": "F2",
+    "tipo": "factual",
+    "label": "Comissão SPARKS - Portaria 1124/2025",
+    "pergunta": "Em qual boletim foi publicada a comissão SPARKS?",
+    "acerto": [
+      false
+    ],
+    "tempo_ms": 0,
+    "top3": [],
+    "boletim_esperado": "BS-144-2025"
+  },
+  {
+    "ferramenta": "fts5",
+    "pergunta_id": "F3",
+    "tipo": "factual",
+    "label": "Designação ARIANNE - Portaria 240/2026 BS-145",
+    "pergunta": "Qual ato designa ARIANNE CASTRO DE ARAÚJO MIRANDA para o 26º Ofício da PRT10?",
+    "acerto": [
+      false
+    ],
+    "tempo_ms": 0,
+    "top3": [],
+    "boletim_esperado": "BS-142-2026"
+  },
+  {
+    "ferramenta": "fts5",
+    "pergunta_id": "F4",
+    "tipo": "factual",
+    "label": "Portaria 332/2025 - dispensa Ana Paula PRT14",
+    "pergunta": "Qual a portaria que dispensa a servidora Ana Paula Alves Dubieux?",
+    "acerto": [
+      false
+    ],
+    "tempo_ms": 0,
+    "top3": [],
+    "boletim_esperado": "BS-001-2026"
+  },
+  {
+    "ferramenta": "fts5",
+    "pergunta_id": "F5",
+    "tipo": "factual",
+    "label": "BS 002/2026 - PRT1 - portaria 1",
+    "pergunta": "Qual a portaria 1 do boletim 002/2026 da PRT1?",
+    "acerto": [
+      false
+    ],
+    "tempo_ms": 0,
+    "top3": [],
+    "boletim_esperado": "BS-002-2026"
+  },
+  {
+    "ferramenta": "fts5",
+    "pergunta_id": "C1",
+    "tipo": "conteudo",
+    "label": "CC-4 - gratificação Chefe de Gabinete",
+    "pergunta": "Qual a gratificação do Chefe de Gabinete da portaria de estrutura organizacional da PRT10?",
+    "acerto": [
+      false
+    ],
+    "tempo_ms": 0,
+    "top3": [],
+    "boletim_esperado": "BS-012-2025"
+  },
+  {
+    "ferramenta": "fts5",
+    "pergunta_id": "C2",
+    "tipo": "conteudo",
+    "label": "Portaria 26/2025 PRT18 - inventário PTM Luziânia",
+    "pergunta": "Sobre o que versa a portaria 26 da PRT18?",
+    "acerto": [
+      false
+    ],
+    "tempo_ms": 0,
+    "top3": [],
+    "boletim_esperado": "BS-050-2025"
+  },
+  {
+    "ferramenta": "fts5",
+    "pergunta_id": "C3",
+    "tipo": "conteudo",
+    "label": "Portaria 2152 anula 1564 (PGEA 20.02.0001)",
+    "pergunta": "Qual portaria anula a portaria 1564.2025 do PGEA 20.02.0001?",
+    "acerto": [
+      false
+    ],
+    "tempo_ms": 0,
+    "top3": [],
+    "boletim_esperado": "BS-001-2026"
+  },
+  {
+    "ferramenta": "fts5",
+    "pergunta_id": "C4",
+    "tipo": "conteudo",
+    "label": "Portaria 332/2025 - dispensa Ana Paula",
+    "pergunta": "Sobre o que versa a portaria 332 de 30 de dezembro de 2025?",
+    "acerto": [
+      false
+    ],
+    "tempo_ms": 0,
+    "top3": [],
+    "boletim_esperado": "BS-001-2026"
+  },
+  {
+    "ferramenta": "fts5",
+    "pergunta_id": "C5",
+    "tipo": "conteudo",
+    "label": "Portaria 13/2026 - Daniel Gemignani 58º Ofício",
+    "pergunta": "Qual portaria designa Daniel Gemignani para o 58º Ofício?",
+    "acerto": [
+      false
+    ],
+    "tempo_ms": 0,
+    "top3": [],
+    "boletim_esperado": "BS-004-2026"
+  }
+]
