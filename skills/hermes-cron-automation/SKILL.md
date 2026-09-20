@@ -105,6 +105,22 @@ echo "mudanças detectadas"                                # entrega
   (`/opt/data/.../wiki`, repos antigos) precisam de update também. Conferir
   com `cronjob action=list` (campos `script` e `prompt_preview`) após qualquer
   rename de pasta/script/repo.
+- ⚠️ **Nunca derivar o mês/ano corrente com `strftime("%b")`** em script de
+  cron. `%b` é dependente do locale do Python (aqui devolve `SEP`, não `SET`)
+  e pode não bater com um dict fixo de abreviaturas — o job falha silenciosamente
+  com "mês inválido" todo dia até cair num mês cuja abreviatura ES coincide.
+  Derivar do número de forma determinística: `list(MESES)[datetime.now().month - 1]`.
+- ⚠️ **O cron roda o wrapper com o python do sistema (por extensão), não o do
+  projeto.** Se o script versionado importa lib pesada que só existe num venv
+  dedicado (ex: docling em `.tool-venv`), `runpy.run_path` sob o python do
+  sistema falha com `ModuleNotFoundError`. Faça o wrapper computar os inputs
+  sob o python do sistema e delegue a etapa pesada via `subprocess.run([venv_python, script, ...])`,
+  propagando `returncode`.
+- ⚠️ **Conversão/batch incremental**: selecione só o trabalho pendente comparando
+  os conjuntos de nomes de arquivo fonte vs. saída, faça apenas o que falta e
+  imprima nada quando o conjunto estiver vazio (mantém o watchdog silencioso).
+  Evita reprocessar o corpus inteiro a cada tick e o stdout-vazio preserva a
+  economia do padrão no_agent.
 
 ## Verificação
 
