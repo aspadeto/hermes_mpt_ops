@@ -81,7 +81,9 @@ def main():
     args = ap.parse_args()
 
     hoje = datetime.now()
-    mes = (args.mes or hoje.strftime("%b").upper())
+    # %b depende do locale (aqui resolve p/ "SEP", que não está no dict pouptuguês).
+    # Derivar o mês do número de forma determinística: list(MESES)[mes-1] = JAN..DEZ.
+    mes = (args.mes or list(MESES)[hoje.month - 1])
     ano = args.ano or str(hoje.year)
     if mes not in MESES:
         sys.exit(f"❌ Mês inválido: {mes} (use JAN..DEZ)")
