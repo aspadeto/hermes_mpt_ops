@@ -213,6 +213,15 @@ caminhos ajustados, (5) token Google via `setup.py --auth-url/--auth-code`,
 
 ## Pitfalls
 
+- **NUNCA derivar mês de `strftime("%b")` — é dependente do locale** (09/2026):
+  mesmo com `LANG=pt_PT.UTF-8`, o Python resolve `%b` para a abreviatura
+  **inglesa** — `date.now().strftime("%b").upper()` deu `"SEP"`, que NÃO está
+  nos dicts de mês em português (`MESES` em `baixar_boletins_novos.py` usa
+  `"SET"`, e também difere em FEV/ABR/MAI/OUT/DEZ). Sintoma: cron de boletins
+  falhou 20 execuções seguidas com `Mês inválido: SEP` antes de chegar a baixar
+  nada. Correção determinística, sem locale: **`mes = (args.mes or
+  list(MESES)[hoje.month - 1])`** (dict ordenado JAN..DEZ → índice = mês-1). Mesmo
+  padrão vale p/ qualquer parser de mês no pipeline (catalogar, download).
 - **Wrappers de cron que usam `runpy.run_path` precisam setar `sys.path` E forçar as envs**
   (22/08/2026): o script OPS real (ex: `pendencia.py`) faz `from ops_paths import ...`.
   Quando um wrapper em `~/.hermes/scripts/` o executa via `runpy.run_path`, o diretório
