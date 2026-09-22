@@ -95,15 +95,15 @@ def indexar(subconjunto=None, api_key=None):
     if subconjunto:
         pdfs = [p for p in pdfs if p.stem in subconjunto]
 
-    novos, faltam_embed = [], []
-    for p in pdfs:
-        h = hashlib_md5_chars(p)
-        row = con.execute("SELECT 1 FROM chunks WHERE src=? AND n=?", (p.stem, h)).fetchone()
-        if row is None:
-            novos.append(p)
+    # hash por arquivo de ORIGEM (caminho pleno no DOC_DIR) para detectar alterações
+    hash_por_src = {p.stem: hashlib_md5_chars(p) for p in pdfs}
+
+    novos = [p for p in pdfs
+             if con.execute("SELECT 1 FROM chunks WHERE src=? AND n=?", (p.stem, hash_por_src[p.stem])).fetchone() is None]
     if not novos:
         print(f"[index] sem novidades ({len(pdfs)} arquivos revisitados).")
-        return con.total_changes or 0
+        con.close()
+        return 0
 
     todas = []
     for p in novos:
@@ -115,12 +115,12 @@ def indexar(subconjunto=None, api_key=None):
     cur = con.cursor()
     now = time.time()
     for (src, txt), v in zip(todas, vecs):
-        h = hashlib_md5_chars(Path(f"{src}.md"))  # hash do arquivo de origem
         cur.execute("INSERT INTO chunks(src,txt,emb,n,ts) VALUES(?,?,?,?,?)",
-                    (src, txt, json.dumps(v), h, now))
+                    (src, txt, json.dumps(v), hash_por_src[src], now))
     # remove chunks de fontes que sumiram (boletim removido)
-    srcs_vivos = {p.stem for p in pdfs}
-    cur.execute("DELETE FROM chunks WHERE src NOT IN (%s)" % ",".join("?"*len(srcs_vivos)), list(srcs_vivos))
+    srcs_vivos = set(hash_por_src)
+    placeholders = ",".join("?"*len(srcs_vivos))
+    cur.execute(f"DELETE FROM chunks WHERE src NOT IN ({placeholders})", list(srcs_vivos))
     con.commit()
     total = cur.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
     print(f"[index] OK: {total} chunks no índice.")
