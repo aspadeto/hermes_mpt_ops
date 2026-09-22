@@ -39,3 +39,6 @@ Thumbs.db
 # Índice invertido dos MDs — artefato REGENERÁVEL pelo pesquisar_boletins.py
 # (não versionar; recriado na primeira execução se ausente)
 data/indices/_indice_md.json
+
+# Índice RAG vetorial (regenerável via rag_vetorial_ng.py indexar)
+data/rag/
