@@ -32,7 +32,14 @@ Abandonadas e arquivadas em `OPS/legado/2026-09-pesquisa-legada/`:
 - `extrair_md_boletins.py` (gerador dos MDs planos)
 - `data/indices/` (`atos_normativos.csv`, `_indice_md.json`)
 
-Não entraram na remoção: `catalogar_atos.py`/`atos.db`/skill `catalogar-atos-boletins` — fora do escopo da decisão, mas da mesma abordagem abandonada (pendência #42 — remover quando fechar).
+Depois (fecha a #42), também arquivados em `legado/2026-09-pesquisa-legada/`:
+- `catalogar_atos.py`, `indexar_boletins_prt14.py` (scripts)
+- `data/atos.db`, `data/curadoria_atos.json` (dados)
+- skill `catalogar-atos-boletins/` (inteira)
+
+Pendências fechadas em lote: #42 `resolvida`; #27, #25, #29 `canceladas` (absorvidas pela unificação). A #26 (revisar o POC `pesquisar_docling.py`) permanece pendente — o POC é a referência do benchmark.
+
+Verificação antes de arquivar scripts: conferir que nenhum script ATIVO faz import do alvo (`catalogar_atos.py` só era importado pelo já-arquivado `exportar_atos_formatos.py`). Referência de docs de skill ≠ dependência em runtime — só imports reais quebram.
 
 ## Regra de limpeza (pitfall)
 
