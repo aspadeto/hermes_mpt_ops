@@ -398,3 +398,4 @@ Quando o usuário perguntar sobre gasto/uso de tokens, usar **`hermes insights`*
 - `references/indexar-boletins-prt14.md` — indexador específico PRT14 (relevância 0/1/2, isolamento de sub-bloco)
 - `references/benchmark-boletins.md` — benchmark formal das ferramentas de pesquisa (4 scripts, 10 perguntas, ground truth)
 - `references/estrategia-boletins-pastas.md` — decisão #35: papéis das 3 pastas de boletins e estratégia de consolidação evolutiva
+- `references/arquitetura-pesquisa-boletins.md` — estado ATUAL (decisão #41): corpus docling canônico, pipeline de ingestão split em 2 crons (download 06:00 / docling 07:00), ferramentas de pesquisa remanescentes e regra de limpeza arquivável

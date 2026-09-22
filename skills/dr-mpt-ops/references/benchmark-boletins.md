@@ -1,5 +1,3 @@
-> ⚠️ **PARCIALMENTE SUPERADO (2026-09, decisão #41):** `csv_factual` (pesquisar_boletins_csv.py)e `fulltext_plano` (pesquisar_boletins.py) foram abandonados e arquivados em `legado/`. O benchmark agora roda só `fulltext_docling` + `docling_poc`.
-
 # Benchmark das Ferramentas de Pesquisa de Boletins
 
 > Decisão/estado em 23/08/2026. Usar como referência ao melhorar busca ou avaliar
