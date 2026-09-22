@@ -193,4 +193,5 @@ if __name__ == "__main__":
         for x in buscar(a.pergunta, k=a.k):
             print(json.dumps(x, ensure_ascii=False))
     elif a.cmd == "benchmark":
-        sys.exit(benchmark(subconjunto=a.subconjunto))
+        benchmark(subconjunto=a.subconjunto)
+        sys.exit(0)
