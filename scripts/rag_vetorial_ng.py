@@ -188,7 +188,8 @@ if __name__ == "__main__":
     bm = sub.add_parser("benchmark"); bm.add_argument("--subconjunto", nargs="*")
     a = ap.parse_args()
     if a.cmd == "indexar":
-        sys.exit(indexar(subconjunto=a.subconjunto))
+        indexar(subconjunto=a.subconjunto)
+        sys.exit(0)
     elif a.cmd == "buscar":
         for x in buscar(a.pergunta, k=a.k):
             print(json.dumps(x, ensure_ascii=False))
