@@ -1,3 +1,5 @@
+> ⚠️ **SUPERADO (2026-09, decisão #41):** a abordagem híbrida "índice + full-text plano" deste doc foi abandonada e arquivada em `legado/2026-09-pesquisa-legada/`. Fonte canônica passou ser só `pesquisar_boletins_fulltext.py` (corpus docling).
+
 # Pesquisa em boletins — PoC híbrida (ago/2026)
 
 Estratégia de busca inteligente nos Boletins de Serviço do MPT usando **2 níveis**

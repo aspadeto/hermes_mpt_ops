@@ -5,11 +5,12 @@ benchmark_boletins.py — Benchmark das ferramentas de pesquisa de boletins.
 Roda as perguntas validadoras em cada ferramenta de pesquisa e avalia o acerto,
 gerando uma tabela consolidada.
 
-Ferramentas (4):
-  1. pesquisar_boletins_csv.py      — factual (índice CSV docling)
-  2. pesquisar_boletins_fulltext.py — full-text no corpus docling
-  3. pesquisar_boletins.py          — full-text no corpus antigo (MD plano)
-  4. pesquisar_docling.py           — POC estruturado docling (referência)
+Ferramentas (2):
+  1. pesquisar_boletins_fulltext.py — full-text no corpus docling
+  2. pesquisar_docling.py           — POC estruturado docling (referência)
+
+Nota (2026-09, decisão #41): pesquisar_boletins.py (MD plano)e pesquisar_boletins_csv.py
+(catálogo CSV) foram abandonados e arquivados em legado/.
 
 Uso:
     python3 benchmark_boletins.py [--formato texto|json] [--dest DIR]
@@ -106,9 +107,7 @@ QUESTIONS = [
 ]
 
 TOOLS = [
-    {"nome": "csv_factual",     "script": "pesquisar_boletins_csv.py"},
     {"nome": "fulltext_docling","script": "pesquisar_boletins_fulltext.py"},
-    {"nome": "fulltext_plano",  "script": "pesquisar_boletins.py"},
     {"nome": "docling_poc",     "script": "pesquisar_docling.py"},
 ]
 

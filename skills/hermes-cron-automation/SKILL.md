@@ -116,6 +116,12 @@ echo "mudanças detectadas"                                # entrega
   sistema falha com `ModuleNotFoundError`. Faça o wrapper computar os inputs
   sob o python do sistema e delegue a etapa pesada via `subprocess.run([venv_python, script, ...])`,
   propagando `returncode`.
+- ⚠️ **Apagar artefato derivado exige desligar o gerador no pipeline.** Índices,
+  CSVs e MDs regeneráveis (ex: `atos_normativos.csv`, MDs planos) costumam ser
+  recriados por um passo do cron de ingestão. Antes de remover, localize no
+  script de pipeline o passo que regenera (grep pelo nome do artefato) e
+  desligue-o na MESMA mudança — senão a exclusão se reverte sozinha no próximo
+  tick e o usuário vê o arquivo "de volta".
 - ⚠️ **Conversão/batch incremental**: selecione só o trabalho pendente comparando
   os conjuntos de nomes de arquivo fonte vs. saída, faça apenas o que falta e
   imprima nada quando o conjunto estiver vazio (mantém o watchdog silencioso).

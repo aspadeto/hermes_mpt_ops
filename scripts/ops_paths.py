@@ -49,7 +49,9 @@ INDICES_DIR = OPS_DATA / "indices"
 BOLETINS_DOWNLOAD_LOG = HERMES_DATA_ROOT / "boletins_download.log"
 
 # Garante que pastas essenciais existam
-for p in (OPS_DATA, INDICES_DIR, KB_BOLETINS, KB_BOLETINS_DOCLING, KB_RAW_BOLETINS):
+# (2026-09, decisão #41): KB_BOLETINS (MDs planos) e INDICES_DIR (CSV) foram
+# abandonados — não recriar. Constantes mantidas por compatibilidade.
+for p in (OPS_DATA, KB_BOLETINS_DOCLING, KB_RAW_BOLETINS):
     p.mkdir(parents=True, exist_ok=True)
 
 

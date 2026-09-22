@@ -1,6 +1,8 @@
 # Boletins no KB — Papéis das pastas e estratégia de consolidação
 
-> Decisão (pendência #35, 23/08/2026). Documenta os papéis das 3 pastas de
+> ⚠️ **ATUALIZADO (2026-09, decisão #41):** a pasta `boletins/` (MDs planos) foi **removida do disco** e arquivada/abandonada. Restam `raw/boletins/` (PDFs) e `boletins_docling/` (canônico, 540. O pipeline de download não regenera mais os MDs planos nem o CSV.
+
+> Decisão (pendência #35, 23/08/2026): documenta os papéis das pastas de
 > boletins no `hermes_mpt_kb` e a estratégia para, no futuro, descartar a pasta
 > de MDs planos sem perder dados nem romper scripts.
 

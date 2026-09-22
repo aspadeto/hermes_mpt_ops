@@ -6,8 +6,7 @@ Detecta e baixa apenas os boletins ainda não presentes localmente:
 1. Consulta o mês corrente no Portal da Transparência
 2. Compara com os boletins já baixados (KB_RAW_BOLETINS/)
 3. Baixa os novos (via baixar_boletim.py + cloudscraper)
-4. Extrai PDF→MD (extrair_md_boletins.py)
-5. Atualiza o catálogo SQLite (catalogar_atos.py)
+4. Conversão Docling roda em cron separado (converter-docling-novos.py, 07:00)
 
 Uso:
     python3 baixar_boletins_novos.py [--mes AUG] [--ano 2026] [--dry-run]
@@ -24,7 +23,7 @@ from datetime import datetime
 from pathlib import Path
 
 # Importa configuração centralizada de caminhos
-from ops_paths import OPS_PATH, KB_PATH, KB_RAW_BOLETINS, KB_BOLETINS, OPS_DATA, OPS_SCRIPTS
+from ops_paths import OPS_PATH, KB_PATH, KB_RAW_BOLETINS, OPS_SCRIPTS
 
 MESES = {
     "JAN": "Janeiro", "FEV": "Fevereiro", "MAR": "Março", "ABR": "Abril",
@@ -139,27 +138,10 @@ def main():
 
     print(f"\n  Baixados: {baixado}/{len(novos)}")
 
-    # 5. Extrair PDF→MD
-    print("\n📄 Extraindo PDF→MD ...")
-    r = subprocess.run(
-        [str(python_bol), str(OPS_SCRIPTS / "extrair_md_boletins.py"),
-         "--orig", str(KB_RAW_BOLETINS), "--dest", str(KB_BOLETINS)],
-        capture_output=True, text=True, timeout=300)
-    print("  " + (r.stdout.strip()[-200:] if r.stdout.strip() else r.stderr[-200:]))
+    # 5. (removido) Conversão Docling: roda em cron separado (converter-docling-novos.py às 07:00).
+    #    Abandonados (2026-09, decisão #41): extração de MDs planos e índice CSV/catálogo SQL.
 
-    # 6. Regenerar o índice CSV (MDs planos → atos_normativos.csv)
-    #    (o catalogar_atos.py espera pastas YYYY-MM-DD; a padronização é MD plano,
-    #     então usa-se o exportar_atos_formatos.py para gerar o índice)
-    print("\n🗂️  Regenerando índice CSV ...")
-    r = subprocess.run(
-        [str(python_bol), str(OPS_SCRIPTS / "exportar_atos_formatos.py"),
-         "--raiz", str(KB_BOLETINS),
-         "--dest", str(OPS_DATA / "indices")],
-        capture_output=True, text=True, timeout=300)
-    saida = r.stdout.strip() if r.stdout.strip() else r.stderr[-200:]
-    print("  " + "\n  ".join(saida.splitlines()[-4:]))
-
-    print("\n✅ Pipeline concluído. Novos boletins baixados, extraídos e indexados.")
+    print("\n✅ Pipeline concluído. Novos boletins baixados.")
     return 0
 
 
